@@ -10,4 +10,6 @@
 
 @interface RethinkDbClient : NSObject
 
++ (RethinkDbClient*) clientWithURL:(NSURL*)url andError:(NSError**)error;
+
 @end

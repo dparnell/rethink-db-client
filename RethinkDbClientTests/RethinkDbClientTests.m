@@ -7,6 +7,7 @@
 //
 
 #import <XCTest/XCTest.h>
+#import "RethinkDbClient.h"
 
 @interface RethinkDbClientTests : XCTestCase
 
@@ -26,9 +27,12 @@
     [super tearDown];
 }
 
-- (void)testExample
+- (void)testLocalConnection
 {
-    XCTFail(@"No implementation for \"%s\"", __PRETTY_FUNCTION__);
+    NSURL* url = [NSURL URLWithString: @"rethink://localhost"];
+    NSError* error = nil;
+    RethinkDbClient* client = [RethinkDbClient clientWithURL: url andError: &error];
+    XCTAssertNotNil(client, @"Connection failed: %@", error);
 }
 
 @end

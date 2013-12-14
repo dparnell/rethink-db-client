@@ -1,0 +1,3 @@
+[submodule "RethinkDbClient/Protocol/protobuf-objc"]
+	path = RethinkDbClient/Protocol/protobuf-objc
+	url = git@github.com:dparnell/protobuf-objc.git
