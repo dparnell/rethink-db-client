@@ -1,0 +1,463 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		654E9D0B185C4EBE0084E6F0 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 654E9D0A185C4EBE0084E6F0 /* Cocoa.framework */; };
+		654E9D15185C4EBE0084E6F0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 654E9D13185C4EBE0084E6F0 /* InfoPlist.strings */; };
+		654E9D19185C4EBE0084E6F0 /* RethinkDbClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D18185C4EBE0084E6F0 /* RethinkDbClient.m */; };
+		654E9D20185C4EBE0084E6F0 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 654E9D1F185C4EBE0084E6F0 /* XCTest.framework */; };
+		654E9D21185C4EBE0084E6F0 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 654E9D0A185C4EBE0084E6F0 /* Cocoa.framework */; };
+		654E9D24185C4EBE0084E6F0 /* RethinkDbClient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 654E9D07185C4EBE0084E6F0 /* RethinkDbClient.framework */; };
+		654E9D2A185C4EBE0084E6F0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 654E9D28185C4EBE0084E6F0 /* InfoPlist.strings */; };
+		654E9D2C185C4EBE0084E6F0 /* RethinkDbClientTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D2B185C4EBE0084E6F0 /* RethinkDbClientTests.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		654E9D22185C4EBE0084E6F0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 654E9CFE185C4EBE0084E6F0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 654E9D06185C4EBE0084E6F0;
+			remoteInfo = RethinkDbClient;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		654E9D07185C4EBE0084E6F0 /* RethinkDbClient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RethinkDbClient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		654E9D0A185C4EBE0084E6F0 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		654E9D0D185C4EBE0084E6F0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		654E9D0E185C4EBE0084E6F0 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		654E9D0F185C4EBE0084E6F0 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		654E9D12185C4EBE0084E6F0 /* RethinkDbClient-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RethinkDbClient-Info.plist"; sourceTree = "<group>"; };
+		654E9D14185C4EBE0084E6F0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		654E9D16185C4EBE0084E6F0 /* RethinkDbClient-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RethinkDbClient-Prefix.pch"; sourceTree = "<group>"; };
+		654E9D17185C4EBE0084E6F0 /* RethinkDbClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RethinkDbClient.h; sourceTree = "<group>"; };
+		654E9D18185C4EBE0084E6F0 /* RethinkDbClient.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RethinkDbClient.m; sourceTree = "<group>"; };
+		654E9D1E185C4EBE0084E6F0 /* RethinkDbClientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RethinkDbClientTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		654E9D1F185C4EBE0084E6F0 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		654E9D27185C4EBE0084E6F0 /* RethinkDbClientTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RethinkDbClientTests-Info.plist"; sourceTree = "<group>"; };
+		654E9D29185C4EBE0084E6F0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		654E9D2B185C4EBE0084E6F0 /* RethinkDbClientTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RethinkDbClientTests.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		654E9D03185C4EBE0084E6F0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				654E9D0B185C4EBE0084E6F0 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		654E9D1B185C4EBE0084E6F0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				654E9D21185C4EBE0084E6F0 /* Cocoa.framework in Frameworks */,
+				654E9D24185C4EBE0084E6F0 /* RethinkDbClient.framework in Frameworks */,
+				654E9D20185C4EBE0084E6F0 /* XCTest.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		654E9CFD185C4EBE0084E6F0 = {
+			isa = PBXGroup;
+			children = (
+				654E9D10185C4EBE0084E6F0 /* RethinkDbClient */,
+				654E9D25185C4EBE0084E6F0 /* RethinkDbClientTests */,
+				654E9D09185C4EBE0084E6F0 /* Frameworks */,
+				654E9D08185C4EBE0084E6F0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		654E9D08185C4EBE0084E6F0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				654E9D07185C4EBE0084E6F0 /* RethinkDbClient.framework */,
+				654E9D1E185C4EBE0084E6F0 /* RethinkDbClientTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		654E9D09185C4EBE0084E6F0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				654E9D0A185C4EBE0084E6F0 /* Cocoa.framework */,
+				654E9D1F185C4EBE0084E6F0 /* XCTest.framework */,
+				654E9D0C185C4EBE0084E6F0 /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		654E9D0C185C4EBE0084E6F0 /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				654E9D0D185C4EBE0084E6F0 /* Foundation.framework */,
+				654E9D0E185C4EBE0084E6F0 /* CoreData.framework */,
+				654E9D0F185C4EBE0084E6F0 /* AppKit.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		654E9D10185C4EBE0084E6F0 /* RethinkDbClient */ = {
+			isa = PBXGroup;
+			children = (
+				654E9D17185C4EBE0084E6F0 /* RethinkDbClient.h */,
+				654E9D18185C4EBE0084E6F0 /* RethinkDbClient.m */,
+				654E9D11185C4EBE0084E6F0 /* Supporting Files */,
+			);
+			path = RethinkDbClient;
+			sourceTree = "<group>";
+		};
+		654E9D11185C4EBE0084E6F0 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				654E9D12185C4EBE0084E6F0 /* RethinkDbClient-Info.plist */,
+				654E9D13185C4EBE0084E6F0 /* InfoPlist.strings */,
+				654E9D16185C4EBE0084E6F0 /* RethinkDbClient-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		654E9D25185C4EBE0084E6F0 /* RethinkDbClientTests */ = {
+			isa = PBXGroup;
+			children = (
+				654E9D2B185C4EBE0084E6F0 /* RethinkDbClientTests.m */,
+				654E9D26185C4EBE0084E6F0 /* Supporting Files */,
+			);
+			path = RethinkDbClientTests;
+			sourceTree = "<group>";
+		};
+		654E9D26185C4EBE0084E6F0 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				654E9D27185C4EBE0084E6F0 /* RethinkDbClientTests-Info.plist */,
+				654E9D28185C4EBE0084E6F0 /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		654E9D04185C4EBE0084E6F0 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		654E9D06185C4EBE0084E6F0 /* RethinkDbClient */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 654E9D2F185C4EBE0084E6F0 /* Build configuration list for PBXNativeTarget "RethinkDbClient" */;
+			buildPhases = (
+				654E9D02185C4EBE0084E6F0 /* Sources */,
+				654E9D03185C4EBE0084E6F0 /* Frameworks */,
+				654E9D04185C4EBE0084E6F0 /* Headers */,
+				654E9D05185C4EBE0084E6F0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RethinkDbClient;
+			productName = RethinkDbClient;
+			productReference = 654E9D07185C4EBE0084E6F0 /* RethinkDbClient.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		654E9D1D185C4EBE0084E6F0 /* RethinkDbClientTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 654E9D32185C4EBE0084E6F0 /* Build configuration list for PBXNativeTarget "RethinkDbClientTests" */;
+			buildPhases = (
+				654E9D1A185C4EBE0084E6F0 /* Sources */,
+				654E9D1B185C4EBE0084E6F0 /* Frameworks */,
+				654E9D1C185C4EBE0084E6F0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				654E9D23185C4EBE0084E6F0 /* PBXTargetDependency */,
+			);
+			name = RethinkDbClientTests;
+			productName = RethinkDbClientTests;
+			productReference = 654E9D1E185C4EBE0084E6F0 /* RethinkDbClientTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		654E9CFE185C4EBE0084E6F0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0500;
+				ORGANIZATIONNAME = "Daniel Parnell";
+				TargetAttributes = {
+					654E9D1D185C4EBE0084E6F0 = {
+						TestTargetID = 654E9D06185C4EBE0084E6F0;
+					};
+				};
+			};
+			buildConfigurationList = 654E9D01185C4EBE0084E6F0 /* Build configuration list for PBXProject "RethinkDbClient" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 654E9CFD185C4EBE0084E6F0;
+			productRefGroup = 654E9D08185C4EBE0084E6F0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				654E9D06185C4EBE0084E6F0 /* RethinkDbClient */,
+				654E9D1D185C4EBE0084E6F0 /* RethinkDbClientTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		654E9D05185C4EBE0084E6F0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				654E9D15185C4EBE0084E6F0 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		654E9D1C185C4EBE0084E6F0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				654E9D2A185C4EBE0084E6F0 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		654E9D02185C4EBE0084E6F0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				654E9D19185C4EBE0084E6F0 /* RethinkDbClient.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		654E9D1A185C4EBE0084E6F0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				654E9D2C185C4EBE0084E6F0 /* RethinkDbClientTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		654E9D23185C4EBE0084E6F0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 654E9D06185C4EBE0084E6F0 /* RethinkDbClient */;
+			targetProxy = 654E9D22185C4EBE0084E6F0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		654E9D13185C4EBE0084E6F0 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				654E9D14185C4EBE0084E6F0 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		654E9D28185C4EBE0084E6F0 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				654E9D29185C4EBE0084E6F0 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		654E9D2D185C4EBE0084E6F0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		654E9D2E185C4EBE0084E6F0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		654E9D30185C4EBE0084E6F0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "RethinkDbClient/RethinkDbClient-Prefix.pch";
+				INFOPLIST_FILE = "RethinkDbClient/RethinkDbClient-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Debug;
+		};
+		654E9D31185C4EBE0084E6F0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "RethinkDbClient/RethinkDbClient-Prefix.pch";
+				INFOPLIST_FILE = "RethinkDbClient/RethinkDbClient-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Release;
+		};
+		654E9D33185C4EBE0084E6F0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/RethinkDbClient.framework/Versions/A/RethinkDbClient";
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "RethinkDbClient/RethinkDbClient-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = "RethinkDbClientTests/RethinkDbClientTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Debug;
+		};
+		654E9D34185C4EBE0084E6F0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/RethinkDbClient.framework/Versions/A/RethinkDbClient";
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "RethinkDbClient/RethinkDbClient-Prefix.pch";
+				INFOPLIST_FILE = "RethinkDbClientTests/RethinkDbClientTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		654E9D01185C4EBE0084E6F0 /* Build configuration list for PBXProject "RethinkDbClient" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				654E9D2D185C4EBE0084E6F0 /* Debug */,
+				654E9D2E185C4EBE0084E6F0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		654E9D2F185C4EBE0084E6F0 /* Build configuration list for PBXNativeTarget "RethinkDbClient" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				654E9D30185C4EBE0084E6F0 /* Debug */,
+				654E9D31185C4EBE0084E6F0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		654E9D32185C4EBE0084E6F0 /* Build configuration list for PBXNativeTarget "RethinkDbClientTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				654E9D33185C4EBE0084E6F0 /* Debug */,
+				654E9D34185C4EBE0084E6F0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 654E9CFE185C4EBE0084E6F0 /* Project object */;
+}
