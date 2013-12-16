@@ -24,6 +24,7 @@ static NSString* rethink_error = @"RethinkDB Error";
 
 @implementation RethinkDbClient {
     int64_t token;
+    NSLock* lock;
     
     __strong RethinkDbClient* connection;
     __strong NSInputStream* input_stream;
@@ -44,6 +45,8 @@ static NSString* rethink_error = @"RethinkDB Error";
     self = [super init];
     
     if(self) {
+        lock = [NSLock new];
+        
         NSString* host_name = [url host];
         if(host_name) {
             NSNumber* port = [url port];
@@ -255,18 +258,26 @@ static NSString* rethink_error = @"RethinkDB Error";
 }
 
 - (Response*) transmit:(Query_Builder*) builder {
+    NSData* response_data;
+    
     if(connection) {
         return [connection transmit: builder];
     }
     
-    Query* query = [[builder setToken: token++] build];
-    int32_t size = [query serializedSize];
-    [pb_output_stream writeRawLittleEndian32: size];
-    [query writeToCodedOutputStream: pb_output_stream];
-    [pb_output_stream flush];
-    
-    int32_t response_size = [pb_input_stream readRawLittleEndian32];
-    NSData* response_data = [pb_input_stream readRawData: response_size];
+    // make sure only one thread can access the actual socket at any one time!
+    [lock lock];
+    @try {
+        Query* query = [[builder setToken: token++] build];
+        int32_t size = [query serializedSize];
+        [pb_output_stream writeRawLittleEndian32: size];
+        [query writeToCodedOutputStream: pb_output_stream];
+        [pb_output_stream flush];
+        
+        int32_t response_size = [pb_input_stream readRawLittleEndian32];
+        response_data = [pb_input_stream readRawData: response_size];
+    } @finally {
+        [lock unlock];
+    }
     return [Response parseFromData: response_data];
 }
 
