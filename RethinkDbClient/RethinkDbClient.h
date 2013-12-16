@@ -12,4 +12,17 @@
 
 + (RethinkDbClient*) clientWithURL:(NSURL*)url andError:(NSError**)error;
 
+- (RethinkDbClient*) db: (NSString*)name;
+
+- (id) run:(NSError**)error;
+
+- (RethinkDbClient*) dbCreate:(NSString*)name;
+- (RethinkDbClient*) dbDrop:(NSString*)name;
+- (RethinkDbClient*) dbList;
+
+- (RethinkDbClient*) createTable:(NSString*)name options:(NSDictionary*)options;
+- (RethinkDbClient*) createTable:(NSString*)name;
+
+@property (retain) NSString* defaultDatabase;
+
 @end
