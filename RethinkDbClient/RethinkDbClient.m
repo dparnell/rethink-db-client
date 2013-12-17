@@ -18,7 +18,8 @@ static NSString* rethink_error = @"RethinkDB Error";
 @interface RethinkDbClient (Private)
 
 - (id) initWithConnection:(RethinkDbClient*)parent;
-- (id) initWithConnection:(RethinkDbClient *)parent andQueryBuilder:(Query_Builder*)builder;
+
+@property (retain) Term* term;
 
 @end
 
@@ -31,7 +32,9 @@ static NSString* rethink_error = @"RethinkDB Error";
     __strong NSOutputStream* output_stream;
     __strong PBCodedOutputStream* pb_output_stream;
     __strong PBCodedInputStream* pb_input_stream;
-    __strong Query_Builder* query_builder;
+    
+    __strong Query* _query;
+    __strong Term* _term;
 }
 
 #pragma mark -
@@ -45,8 +48,6 @@ static NSString* rethink_error = @"RethinkDB Error";
     self = [super init];
     
     if(self) {
-        lock = [NSLock new];
-        
         NSString* host_name = [url host];
         if(host_name) {
             NSNumber* port = [url port];
@@ -122,6 +123,8 @@ static NSString* rethink_error = @"RethinkDB Error";
             RETHINK_ERROR(NSURLErrorBadURL, @"Host name is required");
             return nil;
         }
+        
+        lock = [NSLock new];
     }
     
     return self;
@@ -131,20 +134,6 @@ static NSString* rethink_error = @"RethinkDB Error";
     self = [super init];
     if(self) {
         connection = parent;
-        
-        if(parent->query_builder) {
-            query_builder = [parent->query_builder clone];
-        }
-    }
-    
-    return self;
-}
-
-- (id) initWithConnection:(RethinkDbClient *)parent andQueryBuilder:(Query_Builder*)builder {
-    self = [super init];
-    if(self) {
-        connection = parent;
-        query_builder = builder;
     }
     
     return self;
@@ -154,6 +143,17 @@ static NSString* rethink_error = @"RethinkDB Error";
 {
     [input_stream close];
     [output_stream close];
+}
+
+#pragma mark -
+#pragma mark Properties
+
+- (void) setTerm:(Term *)term {
+    _term = term;
+}
+
+- (Term*) term {
+    return _term;
 }
 
 #pragma mark -
@@ -249,28 +249,17 @@ static NSString* rethink_error = @"RethinkDB Error";
 #pragma mark -
 #pragma mark common functions
 
-
-- (RethinkDbClient*) db: (NSString*)name {
-    RethinkDbClient* db = [[RethinkDbClient alloc] initWithConnection: self];
-    db.defaultDatabase = name;
-    
-    return db;
-}
-
-- (Response*) transmit:(Query_Builder*) builder {
+- (Response*) transmit:(Query_Builder*) query {
     NSData* response_data;
-    
-    if(connection) {
-        return [connection transmit: builder];
-    }
     
     // make sure only one thread can access the actual socket at any one time!
     [lock lock];
     @try {
-        Query* query = [[builder setToken: token++] build];
-        int32_t size = [query serializedSize];
+        [query setToken: token++];
+        Query* q = [query build];        
+        int32_t size = [q serializedSize];
         [pb_output_stream writeRawLittleEndian32: size];
-        [query writeToCodedOutputStream: pb_output_stream];
+        [q writeToCodedOutputStream: pb_output_stream];
         [pb_output_stream flush];
         
         int32_t response_size = [pb_input_stream readRawLittleEndian32];
@@ -281,31 +270,23 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [Response parseFromData: response_data];
 }
 
-- (id) run:(Query_Builder*) builder error:(NSError**) error {
-    if(_defaultDatabase) {
-        Datum_Builder* db = [Datum_Builder new];
-        db.type = Datum_DatumTypeRStr;
-        db.rStr = _defaultDatabase;
-        
-        Term_Builder* db_term = [Term_Builder new];
-        db_term.type = Term_TermTypeDatum;
-        db_term.datum = [db build];
-        
-        Term_Builder* term_builder = [Term_Builder new];
-        term_builder.type = Term_TermTypeDb;
-        [term_builder addArgs: [db_term build]];
-        
-        Term* term = [term_builder build];
-        
-        Query_AssocPair_Builder* args_builder = [Query_AssocPair_Builder new];
-        args_builder.key = @"db";
-        args_builder.val = term;
-        
-        Query_AssocPair* args = [args_builder build];
-        [builder addGlobalOptargs: args];
+- (id) run:(Term*) toRun withQuery:(Query*)query error:(NSError**) error {
+    if(query == nil) {
+        query = _query;
     }
     
-    Response* response = [self transmit: builder];
+    if(connection) {
+        return [connection run: toRun withQuery: query error: error];
+    }
+    
+    Query_Builder* toExecute = [Query_Builder new];
+    if(query) {
+        [toExecute mergeFrom: query];
+    }
+    toExecute.type = Query_QueryTypeStart;
+    toExecute.query = toRun;
+    
+    Response* response = [self transmit: toExecute];
     
     if(response.type == Response_ResponseTypeClientError || response.type == Response_ResponseTypeCompileError || response.type == Response_ResponseTypeRuntimeError) {
         if(error) {
@@ -323,9 +304,8 @@ static NSString* rethink_error = @"RethinkDB Error";
 }
 
 - (id) run:(NSError**)error {
-    if(query_builder) {
-        id result = [self run: query_builder error: error];
-        [query_builder clear];
+    if(_term) {
+        id result = [self run: _term withQuery: _query error: error];
         
         return result;
     }
@@ -337,9 +317,55 @@ static NSString* rethink_error = @"RethinkDB Error";
 #pragma mark -
 #pragma mark database functions
 
+- (Query_Builder*) queryBuilder {
+    RethinkDbClient* client = connection;
+    while(_query == nil && client) {
+        _query = connection->_query;
+        client = client->connection;
+    }
+    
+    Query_Builder* result = [Query_Builder new];
+    if(_query) {
+        [result mergeFrom: _query];
+    }
+    
+    return result;
+}
+
+- (RethinkDbClient*) db: (NSString*)name {
+    Query_Builder* query = [self queryBuilder];
+    
+    RethinkDbClient* db = [[RethinkDbClient alloc] initWithConnection: self];
+    db.defaultDatabase = name;
+    
+    Datum_Builder* db_datum = [Datum_Builder new];
+    db_datum.type = Datum_DatumTypeRStr;
+    db_datum.rStr = name;
+    
+    Term_Builder* db_term = [Term_Builder new];
+    db_term.type = Term_TermTypeDatum;
+    db_term.datum = [db_datum build];
+    
+    Term_Builder* term_builder = [Term_Builder new];
+    term_builder.type = Term_TermTypeDb;
+    [term_builder addArgs: [db_term build]];
+    
+    Query_AssocPair_Builder* args_builder = [Query_AssocPair_Builder new];
+    args_builder.key = @"db";
+    args_builder.val = [term_builder build];
+    
+    Query_AssocPair* args = [args_builder build];
+    [query addGlobalOptargs: args];
+    
+    db->_query = [query build];
+    
+    return db;
+}
+
 - (RethinkDbClient*) dbCreate:(NSString*)name {
-    Term_Builder* tb = [Term_Builder new];
-    tb.type = Term_TermTypeDbCreate;
+    RethinkDbClient* dbCreate = [[RethinkDbClient alloc] initWithConnection: self];
+    Term_Builder* dbCreateTerm = [Term_Builder new];
+    dbCreateTerm.type = Term_TermTypeDbCreate;
     
     Datum_Builder* datum = [Datum_Builder new];
     datum.type = Datum_DatumTypeRStr;
@@ -349,18 +375,17 @@ static NSString* rethink_error = @"RethinkDB Error";
     arg.type = Term_TermTypeDatum;
     arg.datum = [datum build];
     
-    [tb addArgs: [arg build]];
+    [dbCreateTerm addArgs: [arg build]];
+
+    dbCreate.term = [dbCreateTerm build];
     
-    query_builder = [Query_Builder new];
-    query_builder.type = Query_QueryTypeStart;
-    query_builder.query = tb.build;
-    
-    return self;
+    return dbCreate;
 }
 
 - (RethinkDbClient*) dbDrop:(NSString*)name {
-    Term_Builder* tb = [Term_Builder new];
-    tb.type = Term_TermTypeDbDrop;
+    RethinkDbClient* dbDrop = [[RethinkDbClient alloc] initWithConnection: self];
+    Term_Builder* dbDropTerm = [Term_Builder new];
+    dbDropTerm.type = Term_TermTypeDbDrop;
     
     Datum_Builder* datum = [Datum_Builder new];
     datum.type = Datum_DatumTypeRStr;
@@ -370,32 +395,31 @@ static NSString* rethink_error = @"RethinkDB Error";
     arg.type = Term_TermTypeDatum;
     arg.datum = [datum build];
     
-    [tb addArgs: [arg build]];
+    [dbDropTerm addArgs: [arg build]];
     
-    query_builder = [Query_Builder new];
-    query_builder.type = Query_QueryTypeStart;
-    query_builder.query = tb.build;
+    dbDrop.term = [dbDropTerm build];
     
-    return self;
+    return dbDrop;
 }
 
 - (RethinkDbClient*) dbList {
-    Term_Builder* tb = [Term_Builder new];
-    tb.type = Term_TermTypeDbList;
+    RethinkDbClient* dbList = [[RethinkDbClient alloc] initWithConnection: self];
+    Term_Builder* dbListTerm = [Term_Builder new];
+    dbListTerm.type = Term_TermTypeDbList;
     
-    query_builder = [Query_Builder new];
-    query_builder.type = Query_QueryTypeStart;
-    query_builder.query = tb.build;
+    dbList.term = [dbListTerm build];
     
-    return self;
+    return dbList;
 }
 
 #pragma mark -
 #pragma mark table functions
 
-- (RethinkDbClient*) createTable:(NSString*)name options:(NSDictionary*)options {
-    Term_Builder* tb = [Term_Builder new];
-    tb.type = Term_TermTypeTableCreate;
+- (RethinkDbClient*) tableCreate:(NSString*)name options:(NSDictionary*)options {
+    RethinkDbClient* tableCreate = [[RethinkDbClient alloc] initWithConnection: self];
+    
+    Term_Builder* tableCreateTerm = [Term_Builder new];
+    tableCreateTerm.type = Term_TermTypeTableCreate;
     
     Datum_Builder* datum = [Datum_Builder new];
     datum.type = Datum_DatumTypeRStr;
@@ -405,17 +429,15 @@ static NSString* rethink_error = @"RethinkDB Error";
     arg.type = Term_TermTypeDatum;
     arg.datum = datum.build;
     
-    [tb addArgs: [arg build]];
+    [tableCreateTerm addArgs: [arg build]];
+
+    tableCreate.term = [tableCreateTerm build];
     
-    query_builder = [Query_Builder new];
-    query_builder.type = Query_QueryTypeStart;
-    query_builder.query = [tb build];
-    
-    return self;
+    return tableCreate;
 }
 
-- (RethinkDbClient*) createTable:(NSString*)name {
-    return [self createTable: name options: nil];
+- (RethinkDbClient*) tableCreate:(NSString*)name {
+    return [self tableCreate: name options: nil];
 }
 
 

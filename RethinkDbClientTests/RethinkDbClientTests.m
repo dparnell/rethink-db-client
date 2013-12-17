@@ -59,7 +59,7 @@
     RethinkDbClient* r = [RethinkDbClient clientWithURL: url andError: &error];
     XCTAssertNotNil(r, @"Connection failed: %@", error);
 
-    id response = [[[r db: @"test"] createTable: @"blah"] run: &error];
+    id response = [[[r db: @"test"] tableCreate: @"blah"] run: &error];
     XCTAssertNotNil(response, @"createTable failed: %@", error);
 }
 
