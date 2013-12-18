@@ -65,6 +65,9 @@
     NSArray* tables = [[r tableList] run: &error];
     XCTAssertNotNil(tables, @"tableList failed: %@", error);
     XCTAssert([tables indexOfObject: @"blah"] != NSNotFound, @"table should include 'blah'");
+  
+    response = [[[r table: @"blah"] insert: [NSDictionary dictionaryWithObject: @"Daniel" forKey: @"name"]] run: &error];
+    XCTAssertNotNil(response, @"insert failed: %@", error);
     
     response = [[r tableDrop: @"blah"] run: &error];
     XCTAssertNotNil(response, @"createDrop failed: %@", error);

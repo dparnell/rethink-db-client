@@ -286,6 +286,10 @@ static NSString* rethink_error = @"RethinkDB Error";
 }
 
 - (Term*) expr:(id)object {
+    if([object isKindOfClass: [Term class]]) {
+        return object;
+    }
+    
     Term_Builder* term = [Term_Builder new];
     term.type = Term_TermTypeDatum;
     term.datum = [self datumFromNSObject: object];
@@ -477,5 +481,29 @@ static NSString* rethink_error = @"RethinkDB Error";
 - (RethinkDbClient*) tableList {
     return [self clientWithTerm: [self termWithType: Term_TermTypeTableList]];
 }
+
+- (RethinkDbClient*) table:(NSString*)name options:(NSDictionary*)options {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeTable arg: name andOptions: options]];
+}
+
+- (RethinkDbClient*) table:(NSString*)name {
+    return [self table: name options: nil];
+}
+
+- (RethinkDbClient*) insert:(id)object options:(NSDictionary*)options {
+    if(self.term.type != Term_TermTypeTable) {
+        @throw [NSException exceptionWithName: rethink_error reason: @"insert requires a table object" userInfo: nil];
+    }
+
+    
+    return [self clientWithTerm: [self termWithType: Term_TermTypeInsert
+                                               args: [NSArray arrayWithObjects: self.term, object, nil]
+                                         andOptions: options]];
+}
+
+- (RethinkDbClient*) insert:(id)object {
+    return [self insert: object options: nil];
+}
+
 
 @end
