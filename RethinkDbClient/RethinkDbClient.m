@@ -246,8 +246,116 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [NSError errorWithDomain: rethink_error code: -1 userInfo: [NSDictionary dictionaryWithObject: @"Invalid response type" forKey: NSLocalizedDescriptionKey]];
 }
 
+- (Datum*) datumFromNSObject:(id) object {
+    Datum_Builder* result = [Datum_Builder new];
+    
+    if(object == nil || [object isKindOfClass: [NSNull class]]) {
+        result.type = Datum_DatumTypeRNull;
+    } else if([object isKindOfClass: [NSString class]]) {
+        result.type = Datum_DatumTypeRStr;
+        result.rStr = object;
+    } else if([object isKindOfClass: [NSNumber class]]) {
+        NSNumber* num = (NSNumber*)object;
+        
+        if (num == (void*)kCFBooleanFalse || num == (void*)kCFBooleanTrue) {
+            result.type = Datum_DatumTypeRBool;
+            result.rBool = [num boolValue];
+        } else {
+            result.type = Datum_DatumTypeRNum;
+            result.rNum = [object doubleValue];
+        }
+    } else if([object isKindOfClass: [NSArray class]]) {
+        NSArray* array = (NSArray*)object;
+        result.type = Datum_DatumTypeRArray;
+        for(id obj in array) {
+            [result addRArray: [self datumFromNSObject: obj]];
+        }
+    } else if([object isKindOfClass: [NSDictionary class]]) {
+        NSDictionary* dict = (NSDictionary*)object;
+        result.type = Datum_DatumTypeRObject;
+        
+        [dict enumerateKeysAndObjectsUsingBlock:^(NSString* key, id obj, BOOL *stop) {
+            Datum_AssocPair_Builder* pair = [Datum_AssocPair_Builder new];
+            pair.key = key;
+            pair.val = [self datumFromNSObject: obj];
+            
+            [result addRObject: [pair build]];
+        }];
+    }
+    return [result build];
+}
+
+- (Term*) expr:(id)object {
+    Term_Builder* term = [Term_Builder new];
+    term.type = Term_TermTypeDatum;
+    term.datum = [self datumFromNSObject: object];
+    
+    return [term build];
+}
+
 #pragma mark -
 #pragma mark common functions
+
+- (Query_Builder*) queryBuilder {
+    RethinkDbClient* client = connection;
+    while(_query == nil && client) {
+        _query = connection->_query;
+        client = client->connection;
+    }
+    
+    Query_Builder* result = [Query_Builder new];
+    if(_query) {
+        [result mergeFrom: _query];
+    }
+    
+    return result;
+}
+
+- (Term*) termWithType:(Term_TermType)type args:(NSArray*) args andOptions:(NSDictionary*)options {
+    Term_Builder* term = [Term_Builder new];
+    term.type = type;
+    
+    if(args) {
+        for(id arg in args) {
+            [term addArgs: [self expr: arg]];
+        }
+    }
+    
+    if(options) {
+        [options enumerateKeysAndObjectsUsingBlock:^(NSString* key, id obj, BOOL *stop) {
+            Term_AssocPair_Builder* pair = [Term_AssocPair_Builder new];
+            pair.key = key;
+            pair.val = [self expr: obj];
+            
+            [term addOptargs: [pair build]];
+        }];
+    }
+    
+    return [term build];
+}
+
+- (Term*) termWithType:(Term_TermType)type andArgs:(NSArray*)args {
+    return [self termWithType: type args: args andOptions: nil];
+}
+
+- (Term*) termWithType:(Term_TermType)type {
+    return [self termWithType: type args: nil andOptions: nil];
+}
+
+- (Term*) termWithType:(Term_TermType)type arg:(id)arg andOptions:(NSDictionary*) options {
+    return [self termWithType: type args: [NSArray arrayWithObject: arg] andOptions: options];
+}
+
+- (Term*) termWithType:(Term_TermType)type andArg:(id)arg {
+    return [self termWithType: type args: [NSArray arrayWithObject: arg] andOptions: nil];
+}
+
+- (RethinkDbClient*) clientWithTerm:(Term*) term {
+    RethinkDbClient* client = [[RethinkDbClient alloc] initWithConnection: self];
+    client.term = term;
+    
+    return client;
+}
 
 - (Response*) transmit:(Query_Builder*) query {
     NSData* response_data;
@@ -317,38 +425,15 @@ static NSString* rethink_error = @"RethinkDB Error";
 #pragma mark -
 #pragma mark database functions
 
-- (Query_Builder*) queryBuilder {
-    RethinkDbClient* client = connection;
-    while(_query == nil && client) {
-        _query = connection->_query;
-        client = client->connection;
-    }
-    
-    Query_Builder* result = [Query_Builder new];
-    if(_query) {
-        [result mergeFrom: _query];
-    }
-    
-    return result;
-}
-
 - (RethinkDbClient*) db: (NSString*)name {
     Query_Builder* query = [self queryBuilder];
     
     RethinkDbClient* db = [[RethinkDbClient alloc] initWithConnection: self];
     db.defaultDatabase = name;
     
-    Datum_Builder* db_datum = [Datum_Builder new];
-    db_datum.type = Datum_DatumTypeRStr;
-    db_datum.rStr = name;
-    
-    Term_Builder* db_term = [Term_Builder new];
-    db_term.type = Term_TermTypeDatum;
-    db_term.datum = [db_datum build];
-    
     Term_Builder* term_builder = [Term_Builder new];
     term_builder.type = Term_TermTypeDb;
-    [term_builder addArgs: [db_term build]];
+    [term_builder addArgs: [self expr: name]];
     
     Query_AssocPair_Builder* args_builder = [Query_AssocPair_Builder new];
     args_builder.key = @"db";
@@ -363,82 +448,34 @@ static NSString* rethink_error = @"RethinkDB Error";
 }
 
 - (RethinkDbClient*) dbCreate:(NSString*)name {
-    RethinkDbClient* dbCreate = [[RethinkDbClient alloc] initWithConnection: self];
-    Term_Builder* dbCreateTerm = [Term_Builder new];
-    dbCreateTerm.type = Term_TermTypeDbCreate;
-    
-    Datum_Builder* datum = [Datum_Builder new];
-    datum.type = Datum_DatumTypeRStr;
-    datum.rStr = name;
-    
-    Term_Builder* arg = [Term_Builder new];
-    arg.type = Term_TermTypeDatum;
-    arg.datum = [datum build];
-    
-    [dbCreateTerm addArgs: [arg build]];
-
-    dbCreate.term = [dbCreateTerm build];
-    
-    return dbCreate;
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDbCreate andArg: name]];
 }
 
 - (RethinkDbClient*) dbDrop:(NSString*)name {
-    RethinkDbClient* dbDrop = [[RethinkDbClient alloc] initWithConnection: self];
-    Term_Builder* dbDropTerm = [Term_Builder new];
-    dbDropTerm.type = Term_TermTypeDbDrop;
-    
-    Datum_Builder* datum = [Datum_Builder new];
-    datum.type = Datum_DatumTypeRStr;
-    datum.rStr = name;
-    
-    Term_Builder* arg = [Term_Builder new];
-    arg.type = Term_TermTypeDatum;
-    arg.datum = [datum build];
-    
-    [dbDropTerm addArgs: [arg build]];
-    
-    dbDrop.term = [dbDropTerm build];
-    
-    return dbDrop;
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDbDrop andArg: name]];
 }
 
 - (RethinkDbClient*) dbList {
-    RethinkDbClient* dbList = [[RethinkDbClient alloc] initWithConnection: self];
-    Term_Builder* dbListTerm = [Term_Builder new];
-    dbListTerm.type = Term_TermTypeDbList;
-    
-    dbList.term = [dbListTerm build];
-    
-    return dbList;
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDbList]];
 }
 
 #pragma mark -
 #pragma mark table functions
 
 - (RethinkDbClient*) tableCreate:(NSString*)name options:(NSDictionary*)options {
-    RethinkDbClient* tableCreate = [[RethinkDbClient alloc] initWithConnection: self];
-    
-    Term_Builder* tableCreateTerm = [Term_Builder new];
-    tableCreateTerm.type = Term_TermTypeTableCreate;
-    
-    Datum_Builder* datum = [Datum_Builder new];
-    datum.type = Datum_DatumTypeRStr;
-    datum.rStr = name;
-
-    Term_Builder* arg = [Term_Builder new];
-    arg.type = Term_TermTypeDatum;
-    arg.datum = datum.build;
-    
-    [tableCreateTerm addArgs: [arg build]];
-
-    tableCreate.term = [tableCreateTerm build];
-    
-    return tableCreate;
+    return [self clientWithTerm: [self termWithType: Term_TermTypeTableCreate arg: name andOptions: options]];
 }
 
 - (RethinkDbClient*) tableCreate:(NSString*)name {
     return [self tableCreate: name options: nil];
 }
 
+- (RethinkDbClient*) tableDrop:(NSString*)name {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeTableDrop andArg: name]];
+}
+
+- (RethinkDbClient*) tableList {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeTableList]];
+}
 
 @end

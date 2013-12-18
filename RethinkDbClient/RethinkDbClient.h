@@ -22,6 +22,8 @@
 
 - (RethinkDbClient*) tableCreate:(NSString*)name options:(NSDictionary*)options;
 - (RethinkDbClient*) tableCreate:(NSString*)name;
+- (RethinkDbClient*) tableDrop:(NSString*)name;
+- (RethinkDbClient*) tableList;
 
 @property (retain) NSString* defaultDatabase;
 

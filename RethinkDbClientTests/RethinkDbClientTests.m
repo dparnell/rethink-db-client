@@ -56,11 +56,18 @@
 - (void) testTableMethods {
     NSURL* url = [NSURL URLWithString: @"rethink://localhost"];
     NSError* error = nil;
-    RethinkDbClient* r = [RethinkDbClient clientWithURL: url andError: &error];
+    RethinkDbClient* r = [[RethinkDbClient clientWithURL: url andError: &error] db: @"test"];
     XCTAssertNotNil(r, @"Connection failed: %@", error);
 
-    id response = [[[r db: @"test"] tableCreate: @"blah"] run: &error];
+    id response = [[r tableCreate: @"blah"] run: &error];
     XCTAssertNotNil(response, @"createTable failed: %@", error);
+    
+    NSArray* tables = [[r tableList] run: &error];
+    XCTAssertNotNil(tables, @"tableList failed: %@", error);
+    XCTAssert([tables indexOfObject: @"blah"] != NSNotFound, @"table should include 'blah'");
+    
+    response = [[r tableDrop: @"blah"] run: &error];
+    XCTAssertNotNil(response, @"createDrop failed: %@", error);
 }
 
 @end
