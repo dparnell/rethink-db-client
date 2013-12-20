@@ -14,6 +14,7 @@ static NSString* rethink_error = @"RethinkDB Error";
 
 #define ERROR(x) if(error) *error = x
 #define RETHINK_ERROR(x,y) if(error) *error = [NSError errorWithDomain: rethink_error code: x userInfo: [NSDictionary dictionaryWithObject: y forKey: NSLocalizedDescriptionKey]]
+#define CHECK_NULL(x) (x == nil ? [NSNull null] : x)
 
 @interface RethinkDbClient (Private)
 
@@ -289,6 +290,13 @@ static NSString* rethink_error = @"RethinkDB Error";
     if([object isKindOfClass: [Term class]]) {
         return object;
     }
+    if([object isKindOfClass: [RethinkDbClient class]]) {
+        RethinkDbClient* client = (RethinkDbClient*)object;
+        return client.term;
+    }
+    if([object isKindOfClass: [NSPredicate class]]) {
+        @throw [NSException exceptionWithName: rethink_error reason: @"NSPredicate support is not yet implemented" userInfo: nil];
+    }
     
     Term_Builder* term = [Term_Builder new];
     term.type = Term_TermTypeDatum;
@@ -296,9 +304,6 @@ static NSString* rethink_error = @"RethinkDB Error";
     
     return [term build];
 }
-
-#pragma mark -
-#pragma mark common functions
 
 - (Query_Builder*) queryBuilder {
     RethinkDbClient* client = connection;
@@ -342,16 +347,20 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [self termWithType: type args: args andOptions: nil];
 }
 
+- (Term*) termWithType:(Term_TermType)type andOptions:(NSDictionary*) options {
+    return [self termWithType: type args: nil andOptions: options];
+}
+
 - (Term*) termWithType:(Term_TermType)type {
     return [self termWithType: type args: nil andOptions: nil];
 }
 
 - (Term*) termWithType:(Term_TermType)type arg:(id)arg andOptions:(NSDictionary*) options {
-    return [self termWithType: type args: [NSArray arrayWithObject: arg] andOptions: options];
+    return [self termWithType: type args: [NSArray arrayWithObject: CHECK_NULL(arg)] andOptions: options];
 }
 
 - (Term*) termWithType:(Term_TermType)type andArg:(id)arg {
-    return [self termWithType: type args: [NSArray arrayWithObject: arg] andOptions: nil];
+    return [self termWithType: type args: [NSArray arrayWithObject: CHECK_NULL(arg)] andOptions: nil];
 }
 
 - (RethinkDbClient*) clientWithTerm:(Term*) term {
@@ -368,7 +377,8 @@ static NSString* rethink_error = @"RethinkDB Error";
     [lock lock];
     @try {
         [query setToken: token++];
-        Query* q = [query build];        
+        Query* q = [query build];
+        
         int32_t size = [q serializedSize];
         [pb_output_stream writeRawLittleEndian32: size];
         [q writeToCodedOutputStream: pb_output_stream];
@@ -382,6 +392,9 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [Response parseFromData: response_data];
 }
 
+#pragma mark -
+#pragma mark common functions
+
 - (id) run:(Term*) toRun withQuery:(Query*)query error:(NSError**) error {
     if(query == nil) {
         query = _query;
@@ -391,28 +404,33 @@ static NSString* rethink_error = @"RethinkDB Error";
         return [connection run: toRun withQuery: query error: error];
     }
     
-    Query_Builder* toExecute = [Query_Builder new];
-    if(query) {
-        [toExecute mergeFrom: query];
-    }
-    toExecute.type = Query_QueryTypeStart;
-    toExecute.query = toRun;
-    
-    Response* response = [self transmit: toExecute];
-    
-    if(response.type == Response_ResponseTypeClientError || response.type == Response_ResponseTypeCompileError || response.type == Response_ResponseTypeRuntimeError) {
-        if(error) {
-            // TODO: give more details when something goes wrong
-            Datum* errorDatum = [[response response] objectAtIndex: 0];
-            *error = [NSError errorWithDomain: rethink_error code: response.type userInfo: [NSDictionary dictionaryWithObjectsAndKeys:
-                                                                                            errorDatum.rStr, NSLocalizedDescriptionKey,
-                                                                                            [self decodeErrorResponse: response], @"RethinkDB Response",
-                                                                                            nil]];
+    if(input_stream && output_stream) {
+        Query_Builder* toExecute = [Query_Builder new];
+        if(query) {
+            [toExecute mergeFrom: query];
         }
-        return nil;
+        toExecute.type = Query_QueryTypeStart;
+        toExecute.query = toRun;
+        
+        Response* response = [self transmit: toExecute];
+        
+        if(response.type == Response_ResponseTypeClientError || response.type == Response_ResponseTypeCompileError || response.type == Response_ResponseTypeRuntimeError) {
+            if(error) {
+                // TODO: give more details when something goes wrong
+                Datum* errorDatum = [[response response] objectAtIndex: 0];
+                *error = [NSError errorWithDomain: rethink_error code: response.type userInfo: [NSDictionary dictionaryWithObjectsAndKeys:
+                                                                                                errorDatum.rStr, NSLocalizedDescriptionKey,
+                                                                                                [self decodeErrorResponse: response], @"RethinkDB Response",
+                                                                                                nil]];
+            }
+            return nil;
+        }
+        
+        return [self decodeResponse: response];
     }
     
-    return [self decodeResponse: response];
+    RETHINK_ERROR(-2, @"Connection is not open");
+    return nil;
 }
 
 - (id) run:(NSError**)error {
@@ -424,6 +442,17 @@ static NSString* rethink_error = @"RethinkDB Error";
     
     RETHINK_ERROR(-1, @"No query specified");
     return nil;
+}
+
+- (BOOL) close:(NSError**)error {
+    [input_stream close];
+    [output_stream close];
+    pb_input_stream = nil;
+    pb_output_stream = nil;
+    input_stream = nil;
+    output_stream = nil;
+    
+    return YES;
 }
 
 #pragma mark -
@@ -482,6 +511,34 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [self clientWithTerm: [self termWithType: Term_TermTypeTableList]];
 }
 
+- (RethinkDbClient*) indexCreate:(NSString*)name {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeIndexCreate andArg: name]];
+}
+
+- (RethinkDbClient*) indexDrop:(NSString*)name {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeIndexDrop andArg: name]];
+}
+
+- (RethinkDbClient*) indexList {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeIndexList]];
+}
+
+- (RethinkDbClient*) indexStatus:(id)names {
+    if([names isKindOfClass: [NSString class]]) {
+        return [self clientWithTerm: [self termWithType: Term_TermTypeIndexStatus andArg: names]];
+    } else {
+        return [self clientWithTerm: [self termWithType: Term_TermTypeIndexStatus andArgs: names]];
+    }
+}
+
+- (RethinkDbClient*) indexWait:(id)names {
+    if([names isKindOfClass: [NSString class]]) {
+        return [self clientWithTerm: [self termWithType: Term_TermTypeIndexWait andArg: names]];
+    } else {
+        return [self clientWithTerm: [self termWithType: Term_TermTypeIndexWait andArgs: names]];
+    }
+}
+
 - (RethinkDbClient*) table:(NSString*)name options:(NSDictionary*)options {
     return [self clientWithTerm: [self termWithType: Term_TermTypeTable arg: name andOptions: options]];
 }
@@ -491,13 +548,8 @@ static NSString* rethink_error = @"RethinkDB Error";
 }
 
 - (RethinkDbClient*) insert:(id)object options:(NSDictionary*)options {
-    if(self.term.type != Term_TermTypeTable) {
-        @throw [NSException exceptionWithName: rethink_error reason: @"insert requires a table object" userInfo: nil];
-    }
-
-    
     return [self clientWithTerm: [self termWithType: Term_TermTypeInsert
-                                               args: [NSArray arrayWithObjects: self.term, object, nil]
+                                               args: [NSArray arrayWithObjects: self, CHECK_NULL(object), nil]
                                          andOptions: options]];
 }
 
@@ -505,5 +557,82 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [self insert: object options: nil];
 }
 
+- (RethinkDbClient*) update:(id)object options:(NSDictionary*)options {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeUpdate
+                                               args: [NSArray arrayWithObjects: self, CHECK_NULL(object), nil]
+                                         andOptions: options]];
+}
+
+- (RethinkDbClient*) update:(id)object {
+    return [self update: object options: nil];
+}
+
+- (RethinkDbClient*) replace:(id)object options:(NSDictionary*)options {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeReplace
+                                               args: [NSArray arrayWithObjects: self, CHECK_NULL(object), nil]
+                                         andOptions: options]];
+}
+
+- (RethinkDbClient*) replace:(id)object {
+    return [self replace: object options: nil];
+}
+
+- (RethinkDbClient*) delete:(NSDictionary*)options {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDelete
+                                         andOptions: options]];
+}
+
+- (RethinkDbClient*) delete {
+    return [self delete: nil];
+}
+
+- (RethinkDbClient*) sync {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeSync]];
+}
+
+- (RethinkDbClient*) get:(id)key {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGet andArg: key]];
+}
+
+- (RethinkDbClient*) getAll:(NSArray*)keys options:(NSDictionary*)options {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGetAll args: keys andOptions: options]];
+}
+
+- (RethinkDbClient*) getAll:(NSArray *)keys {
+    return [self getAll: keys options: nil];
+}
+
+- (RethinkDbClient*) between:(id)lower and:(id)upper options:(NSDictionary*)options {
+    NSArray* args = [NSArray arrayWithObjects: CHECK_NULL(lower), CHECK_NULL(upper), nil];
+    
+    return [self clientWithTerm: [self termWithType: Term_TermTypeBetween args: args andOptions: options]];
+}
+
+- (RethinkDbClient*) between:(id)lower and:(id)upper {
+    return [self between: lower and: upper options: nil];
+}
+
+- (RethinkDbClient*) filter:(id)predicate options:(NSDictionary *)options {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeFilter arg: predicate andOptions: options]];
+}
+
+- (RethinkDbClient*) filter:(id)predicate {
+    return [self filter: predicate options: nil];
+}
+
+- (RethinkDbClient*) row {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeImplicitVar]];
+}
+
+- (RethinkDbClient*) row:(NSString*)key {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGetField andArgs: [NSArray arrayWithObjects:
+                                                                                     [self termWithType: Term_TermTypeImplicitVar],
+                                                                                     CHECK_NULL(key),
+                                                                                     nil]]];
+}
+
+- (RethinkDbClient*) gt:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGt andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
 
 @end

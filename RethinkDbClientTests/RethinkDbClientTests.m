@@ -9,6 +9,12 @@
 #import <XCTest/XCTest.h>
 #import "RethinkDbClient.h"
 
+@interface RethinkDbClient (Private)
+
+- (id) term;
+
+@end
+
 @interface RethinkDbClientTests : XCTestCase
 
 @end
@@ -68,9 +74,41 @@
   
     response = [[[r table: @"blah"] insert: [NSDictionary dictionaryWithObject: @"Daniel" forKey: @"name"]] run: &error];
     XCTAssertNotNil(response, @"insert failed: %@", error);
+    XCTAssertEqualObjects([response objectForKey: @"inserted"], [NSNumber numberWithInt: 1], @"one document should have been inserted: %@", response);
+    XCTAssertNotNil([response objectForKey: @"generated_keys"], @"generated keys not found: %@", response);
     
     response = [[r tableDrop: @"blah"] run: &error];
-    XCTAssertNotNil(response, @"createDrop failed: %@", error);
+    XCTAssertNotNil(response, @"tableDrop failed: %@", error);
+}
+
+- (void) testFilters {
+    NSURL* url = [NSURL URLWithString: @"rethink://localhost"];
+    NSError* error = nil;
+    RethinkDbClient* r = [[RethinkDbClient clientWithURL: url andError: &error] db: @"test"];
+    XCTAssertNotNil(r, @"Connection failed: %@", error);
+
+    id response = [[r tableCreate: @"filterTest"] run: &error];
+    XCTAssertNotNil(response, @"createTable failed: %@", error);
+
+    RethinkDbClient* table = [r table: @"filterTest"];
+    
+    for(int i=0; i<10; i++) {
+        response = [[table insert: [NSDictionary dictionaryWithObject: [NSNumber numberWithInt: i] forKey: @"number"]] run: &error];
+        XCTAssertNotNil(response, @"insert failed: %@", error);
+        XCTAssertEqualObjects([response objectForKey: @"inserted"], [NSNumber numberWithInt: 1], @"one document should have been inserted: %@", response);
+        XCTAssertNotNil([response objectForKey: @"generated_keys"], @"generated keys not found: %@", response);
+    }
+    
+    RethinkDbClient* query = [table filter: [[r row: @"number"] gt: [NSNumber numberWithInt: 5]]];
+    NSLog(@"query = %@", [query term]);
+    
+    NSArray* rows = [query run: &error];
+    XCTAssertNotNil(rows, @"filter failed: %@", error);
+    XCTAssertEqual([rows count], 4, @"there should only be 4 rows");
+    
+    response = [[r tableDrop: @"filterTest"] run: &error];
+    XCTAssertNotNil(response, @"tableDrop failed: %@", error);
+    
 }
 
 @end
