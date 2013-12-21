@@ -666,4 +666,20 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [self clientWithTerm: [self termWithType: Term_TermTypeNot andArg: self]];
 }
 
+- (RethinkDbClient*) and:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeAll andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) or:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeAny andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) any:(NSArray*)expressions {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeAny andArgs: expressions]];
+}
+
+- (RethinkDbClient*) all:(NSArray*)expressions {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeAll andArgs: expressions]];
+}
+
 @end

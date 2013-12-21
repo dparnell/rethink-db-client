@@ -73,6 +73,11 @@
 - (RethinkDbClient*) le:(id)expr;
 
 - (RethinkDbClient*) not;
+- (RethinkDbClient*) and:(id)expr;
+- (RethinkDbClient*) or:(id)expr;
+- (RethinkDbClient*) any:(NSArray*)expressions;
+- (RethinkDbClient*) all:(NSArray*)expressions;
+
 
 @property (retain) NSString* defaultDatabase;
  

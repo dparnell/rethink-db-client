@@ -111,6 +111,11 @@
     XCTAssertNotNil(rows, @"filter failed: %@", error);
     XCTAssertEqual((int)[rows count], 6, @"there should only be 6 rows");
 
+    query = [table filter: [[[r row: @"number"] gt: [NSNumber numberWithInt: 5]] or: [[r row: @"number"] lt: [NSNumber numberWithInteger: 5]]]];
+    rows = [query run: &error];
+    XCTAssertNotNil(rows, @"filter failed: %@", error);
+    XCTAssertEqual((int)[rows count], 9, @"there should only be 9 rows");
+    
     response = [[r tableDrop: @"filterTest"] run: &error];
     XCTAssertNotNil(response, @"tableDrop failed: %@", error);
     
