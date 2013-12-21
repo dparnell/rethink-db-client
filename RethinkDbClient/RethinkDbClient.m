@@ -613,7 +613,14 @@ static NSString* rethink_error = @"RethinkDB Error";
 }
 
 - (RethinkDbClient*) filter:(id)predicate options:(NSDictionary *)options {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeFilter arg: predicate andOptions: options]];
+    if([predicate isKindOfClass: [NSDictionary class]]) {
+        return [self clientWithTerm: [self termWithType: Term_TermTypeFilter args: [NSArray arrayWithObjects: self, CHECK_NULL(predicate), nil] andOptions: options]];
+    }
+    
+    Term* arg_array = [self termWithType: Term_TermTypeMakeArray andArg: [NSNumber numberWithInt: 1]];
+    Term* func = [self termWithType: Term_TermTypeFunc andArgs: [NSArray arrayWithObjects: arg_array, CHECK_NULL(predicate), nil]];
+
+    return [self clientWithTerm: [self termWithType: Term_TermTypeFilter args: [NSArray arrayWithObjects: self, func, nil] andOptions: options]];
 }
 
 - (RethinkDbClient*) filter:(id)predicate {

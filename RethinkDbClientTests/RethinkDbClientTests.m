@@ -100,11 +100,10 @@
     }
     
     RethinkDbClient* query = [table filter: [[r row: @"number"] gt: [NSNumber numberWithInt: 5]]];
-    NSLog(@"query = %@", [query term]);
     
     NSArray* rows = [query run: &error];
     XCTAssertNotNil(rows, @"filter failed: %@", error);
-    XCTAssertEqual([rows count], 4, @"there should only be 4 rows");
+    XCTAssertEqual((int)[rows count], 4, @"there should only be 4 rows");
     
     response = [[r tableDrop: @"filterTest"] run: &error];
     XCTAssertNotNil(response, @"tableDrop failed: %@", error);
