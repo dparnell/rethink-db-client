@@ -10,6 +10,7 @@
 
 @class RethinkDbClient;
 typedef RethinkDbClient* (^RethinkDbJoinPredicate)(RethinkDbClient* left, RethinkDbClient* right);
+typedef RethinkDbClient* (^RethinkDbMappingFunction)(RethinkDbClient* row);
 
 @interface RethinkDbClient : NSObject
 
@@ -88,6 +89,8 @@ typedef RethinkDbClient* (^RethinkDbJoinPredicate)(RethinkDbClient* left, Rethin
 - (RethinkDbClient*) eqJoin:(NSString*)key to:(id)sequence options:(NSDictionary*)options;
 - (RethinkDbClient*) eqJoin:(NSString*)key to:(id)sequence;
 - (RethinkDbClient*) zip;
+
+- (RethinkDbClient*) map:(RethinkDbMappingFunction)function;
 
 - (RethinkDbClient*) count;
 
