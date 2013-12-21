@@ -84,6 +84,10 @@ typedef RethinkDbClient* (^RethinkDbJoinPredicate)(RethinkDbClient* left, Rethin
 - (RethinkDbClient*) all:(NSArray*)expressions;
 
 - (RethinkDbClient*) innerJoin:(id)sequence on:(RethinkDbJoinPredicate)predicate;
+- (RethinkDbClient*) outerJoin:(id)sequence on:(RethinkDbJoinPredicate)predicate;
+- (RethinkDbClient*) eqJoin:(NSString*)key to:(id)sequence options:(NSDictionary*)options;
+- (RethinkDbClient*) eqJoin:(NSString*)key to:(id)sequence;
+- (RethinkDbClient*) zip;
 
 - (RethinkDbClient*) count;
 

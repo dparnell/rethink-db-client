@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		65314AAA1865922D0039BDF3 /* RethinkDbClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 654E9D17185C4EBE0084E6F0 /* RethinkDbClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		654E9D0B185C4EBE0084E6F0 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 654E9D0A185C4EBE0084E6F0 /* Cocoa.framework */; };
 		654E9D15185C4EBE0084E6F0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 654E9D13185C4EBE0084E6F0 /* InfoPlist.strings */; };
 		654E9D19185C4EBE0084E6F0 /* RethinkDbClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D18185C4EBE0084E6F0 /* RethinkDbClient.m */; };
@@ -317,6 +318,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65314AAA1865922D0039BDF3 /* RethinkDbClient.h in Headers */,
 				654E9D7F185C593D0084E6F0 /* ForwardDeclarations.h in Headers */,
 				654E9D6D185C593D0084E6F0 /* AbstractMessage.h in Headers */,
 				654E9D8C185C593D0084E6F0 /* PBMutableExtensionRegistry.h in Headers */,
@@ -674,6 +676,7 @@
 				654E9D31185C4EBE0084E6F0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		654E9D32185C4EBE0084E6F0 /* Build configuration list for PBXNativeTarget "RethinkDbClientTests" */ = {
 			isa = XCConfigurationList;
@@ -682,6 +685,7 @@
 				654E9D34185C4EBE0084E6F0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

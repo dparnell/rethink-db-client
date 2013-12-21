@@ -697,7 +697,7 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [self clientWithTerm: [self termWithType: Term_TermTypeAll andArgs: expressions]];
 }
 
-- (RethinkDbClient*) innerJoin:(id)sequence on:(RethinkDbJoinPredicate)predicate {
+- (RethinkDbClient*) join:(id)sequence on:(RethinkDbJoinPredicate)predicate inner:(BOOL)inner {
     NSNumber* left_num = [NSNumber numberWithInteger: [self nextVariable]];
     NSNumber* right_num = [NSNumber numberWithInteger: [self nextVariable]];
     
@@ -709,7 +709,27 @@ static NSString* rethink_error = @"RethinkDB Error";
     NSArray* args = [NSArray arrayWithObjects: left_num, right_num, nil];
     Term* func = [self termWithType: Term_TermTypeFunc andArgs: [NSArray arrayWithObjects: args, body, nil]];
     
-    return [self clientWithTerm: [self termWithType: Term_TermTypeInnerJoin andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(sequence), func, nil]]];
+    return [self clientWithTerm: [self termWithType: (inner ? Term_TermTypeInnerJoin : Term_TermTypeOuterJoin) andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(sequence), func, nil]]];
+}
+
+- (RethinkDbClient*) innerJoin:(id)sequence on:(RethinkDbJoinPredicate)predicate {
+    return [self join: sequence on: predicate inner: YES];
+}
+
+- (RethinkDbClient*) outerJoin:(id)sequence on:(RethinkDbJoinPredicate)predicate {
+    return [self join: sequence on: predicate inner: NO];
+}
+
+- (RethinkDbClient*) eqJoin:(NSString*)key to:(id)sequence options:(NSDictionary*)options {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeEqJoin args: [NSArray arrayWithObjects: CHECK_NULL(key), CHECK_NULL(sequence), nil] andOptions: options]];
+}
+
+- (RethinkDbClient*) eqJoin:(NSString*)key to:(id)sequence {
+    return [self eqJoin: key to: sequence options: nil];
+}
+
+- (RethinkDbClient*) zip {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeZip andArg: self]];
 }
 
 - (RethinkDbClient*) count {
