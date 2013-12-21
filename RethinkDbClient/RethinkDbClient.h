@@ -8,6 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
+@class RethinkDbClient;
+typedef RethinkDbClient* (^RethinkDbJoinPredicate)(RethinkDbClient* left, RethinkDbClient* right);
+
 @interface RethinkDbClient : NSObject
 
 + (RethinkDbClient*) clientWithURL:(NSURL*)url andError:(NSError**)error;
@@ -63,6 +66,8 @@
 - (RethinkDbClient*) row;
 - (RethinkDbClient*) row:(NSString*)key;
 
+- (RethinkDbClient*) field:(NSString*)key;
+
 - (RethinkDbClient*) eq:(id)expr;
 - (RethinkDbClient*) ne:(id)expr;
 
@@ -78,6 +83,9 @@
 - (RethinkDbClient*) any:(NSArray*)expressions;
 - (RethinkDbClient*) all:(NSArray*)expressions;
 
+- (RethinkDbClient*) innerJoin:(id)sequence on:(RethinkDbJoinPredicate)predicate;
+
+- (RethinkDbClient*) count;
 
 @property (retain) NSString* defaultDatabase;
  

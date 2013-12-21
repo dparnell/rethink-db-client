@@ -15,7 +15,9 @@
 
 @end
 
-@interface RethinkDbClientTests : XCTestCase
+@interface RethinkDbClientTests : XCTestCase {
+    RethinkDbClient* r;
+}
 
 @end
 
@@ -24,35 +26,34 @@
 - (void)setUp
 {
     [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+    
+    NSURL* url = [NSURL URLWithString: @"rethink://localhost"];
+    NSError* error = nil;
+    r = [RethinkDbClient clientWithURL: url andError: &error];
 }
 
 - (void)tearDown
 {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
+    [r close: nil];
+    
     [super tearDown];
 }
 
 - (void)testLocalConnection
 {
-    NSURL* url = [NSURL URLWithString: @"rethink://localhost"];
-    NSError* error = nil;
-    RethinkDbClient* client = [RethinkDbClient clientWithURL: url andError: &error];
-    XCTAssertNotNil(client, @"Connection failed: %@", error);
+    XCTAssertNotNil(r, @"Connection failed");
 }
 
 - (void) testDbMethods
 {
-    NSURL* url = [NSURL URLWithString: @"rethink://localhost"];
     NSError* error = nil;
-    RethinkDbClient* r = [RethinkDbClient clientWithURL: url andError: &error];
-    XCTAssertNotNil(r, @"Connection failed: %@", error);
+    XCTAssertNotNil(r, @"Connection failed");
     
     id response = [[r dbCreate: @"testing1234"] run: &error];
     XCTAssertNotNil(response, @"dbCreate failed: %@", error);
     
     NSArray* db_list = [[r dbList] run: &error];
-    XCTAssertNotNil(response, @"dbList failed failed: %@", error);
+    XCTAssertNotNil(db_list, @"dbList failed failed: %@", error);
     XCTAssert([db_list indexOfObject: @"testing1234"] != NSNotFound, @"dbList should include 'testing1234'");
     
     response = [[r dbDrop: @"testing1234"] run: &error];
@@ -60,10 +61,8 @@
 }
 
 - (void) testTableMethods {
-    NSURL* url = [NSURL URLWithString: @"rethink://localhost"];
     NSError* error = nil;
-    RethinkDbClient* r = [[RethinkDbClient clientWithURL: url andError: &error] db: @"test"];
-    XCTAssertNotNil(r, @"Connection failed: %@", error);
+    XCTAssertNotNil(r, @"Connection failed");
 
     id response = [[r tableCreate: @"blah"] run: &error];
     XCTAssertNotNil(response, @"createTable failed: %@", error);
@@ -82,10 +81,8 @@
 }
 
 - (void) testFilters {
-    NSURL* url = [NSURL URLWithString: @"rethink://localhost"];
     NSError* error = nil;
-    RethinkDbClient* r = [[RethinkDbClient clientWithURL: url andError: &error] db: @"test"];
-    XCTAssertNotNil(r, @"Connection failed: %@", error);
+    XCTAssertNotNil(r, @"Connection failed");
 
     id response = [[r tableCreate: @"filterTest"] run: &error];
     XCTAssertNotNil(response, @"createTable failed: %@", error);
@@ -121,4 +118,27 @@
     
 }
 
+- (void) testJoins {
+    NSError* error = nil;
+    XCTAssertNotNil(r, @"Connection failed");
+    
+    RethinkDbClient* db = [r db: @"test"];
+    NSArray* db_list = [[db tableList] run: &error];
+    XCTAssertNotNil(db_list, @"dbList failed failed: %@", error);
+    
+    if([db_list indexOfObject: @"input_polls"] == NSNotFound || [db_list indexOfObject: @"county_stats"] == NSNotFound) {
+        XCTFail(@"both the 'input_polls' and 'county_status' tables must be present");
+    }
+    
+    RethinkDbClient* query = [[[db table: @"input_polls"] innerJoin: [db table: @"county_stats"] on:^RethinkDbClient *(RethinkDbClient *left, RethinkDbClient *right) {
+        return [[left field: @"id"] eq: [right field: @"Stname"]];
+    }] count];
+    
+    NSLog(@"query = %@", query.term);
+    
+    NSNumber* count = [query run: &error];
+    XCTAssertNotNil(count, @"query failed: %@", error);
+    
+    XCTAssertEqual((int)[count integerValue], 39934, @"count didn't return the right value");
+}
 @end

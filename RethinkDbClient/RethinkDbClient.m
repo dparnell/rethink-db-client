@@ -27,6 +27,7 @@ static NSString* rethink_error = @"RethinkDB Error";
 @implementation RethinkDbClient {
     int64_t token;
     NSLock* lock;
+    NSInteger variable_number;
     
     __strong RethinkDbClient* connection;
     __strong NSInputStream* input_stream;
@@ -395,6 +396,14 @@ static NSString* rethink_error = @"RethinkDB Error";
 #pragma mark -
 #pragma mark common functions
 
+- (NSInteger) nextVariable {
+    if(connection) {
+        return [connection nextVariable];
+    }
+    
+    return variable_number++;
+}
+
 - (id) run:(Term*) toRun withQuery:(Query*)query error:(NSError**) error {
     if(query == nil) {
         query = _query;
@@ -617,7 +626,9 @@ static NSString* rethink_error = @"RethinkDB Error";
         return [self clientWithTerm: [self termWithType: Term_TermTypeFilter args: [NSArray arrayWithObjects: self, CHECK_NULL(predicate), nil] andOptions: options]];
     }
     
-    Term* arg_array = [self termWithType: Term_TermTypeMakeArray andArg: [NSNumber numberWithInt: 1]];
+    NSInteger variable = [self nextVariable];
+    
+    Term* arg_array = [self termWithType: Term_TermTypeMakeArray andArg: [NSNumber numberWithInteger: variable]];
     Term* func = [self termWithType: Term_TermTypeFunc andArgs: [NSArray arrayWithObjects: arg_array, CHECK_NULL(predicate), nil]];
 
     return [self clientWithTerm: [self termWithType: Term_TermTypeFilter args: [NSArray arrayWithObjects: self, func, nil] andOptions: options]];
@@ -636,6 +647,10 @@ static NSString* rethink_error = @"RethinkDB Error";
                                                                                      [self termWithType: Term_TermTypeImplicitVar],
                                                                                      CHECK_NULL(key),
                                                                                      nil]]];
+}
+
+- (RethinkDbClient*) field:(NSString*)key {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGetField andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(key), nil]]];
 }
 
 - (RethinkDbClient*) eq:(id)expr {
@@ -680,6 +695,25 @@ static NSString* rethink_error = @"RethinkDB Error";
 
 - (RethinkDbClient*) all:(NSArray*)expressions {
     return [self clientWithTerm: [self termWithType: Term_TermTypeAll andArgs: expressions]];
+}
+
+- (RethinkDbClient*) innerJoin:(id)sequence on:(RethinkDbJoinPredicate)predicate {
+    NSNumber* left_num = [NSNumber numberWithInteger: [self nextVariable]];
+    NSNumber* right_num = [NSNumber numberWithInteger: [self nextVariable]];
+    
+    RethinkDbClient* left = [self clientWithTerm: [self termWithType: Term_TermTypeGetField andArg: left_num]];
+    RethinkDbClient* right = [self clientWithTerm: [self termWithType: Term_TermTypeGetField andArg: right_num]];
+    
+    RethinkDbClient* body = predicate(left, right);
+    
+    NSArray* args = [NSArray arrayWithObjects: left_num, right_num, nil];
+    Term* func = [self termWithType: Term_TermTypeFunc andArgs: [NSArray arrayWithObjects: args, body, nil]];
+    
+    return [self clientWithTerm: [self termWithType: Term_TermTypeInnerJoin andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(sequence), func, nil]]];
+}
+
+- (RethinkDbClient*) count {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeCount andArg: self]];
 }
 
 @end
