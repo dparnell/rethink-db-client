@@ -134,8 +134,6 @@
         return [[left field: @"id"] eq: [right field: @"Stname"]];
     }] count];
     
-    NSLog(@"query = %@", query.term);
-    
     NSNumber* count = [query run: &error];
     XCTAssertNotNil(count, @"query failed: %@", error);
     

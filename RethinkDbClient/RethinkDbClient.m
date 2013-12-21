@@ -701,8 +701,8 @@ static NSString* rethink_error = @"RethinkDB Error";
     NSNumber* left_num = [NSNumber numberWithInteger: [self nextVariable]];
     NSNumber* right_num = [NSNumber numberWithInteger: [self nextVariable]];
     
-    RethinkDbClient* left = [self clientWithTerm: [self termWithType: Term_TermTypeGetField andArg: left_num]];
-    RethinkDbClient* right = [self clientWithTerm: [self termWithType: Term_TermTypeGetField andArg: right_num]];
+    RethinkDbClient* left = [self clientWithTerm: [self termWithType: Term_TermTypeVar andArg: left_num]];
+    RethinkDbClient* right = [self clientWithTerm: [self termWithType: Term_TermTypeVar andArg: right_num]];
     
     RethinkDbClient* body = predicate(left, right);
     
