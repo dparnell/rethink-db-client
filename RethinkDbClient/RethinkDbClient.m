@@ -638,8 +638,32 @@ static NSString* rethink_error = @"RethinkDB Error";
                                                                                      nil]]];
 }
 
+- (RethinkDbClient*) eq:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeEq andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) ne:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeNe andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
 - (RethinkDbClient*) gt:(id)expr {
     return [self clientWithTerm: [self termWithType: Term_TermTypeGt andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) ge:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGe andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) lt:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeLt andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) le:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeLe andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) not {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeNot andArg: self]];
 }
 
 @end

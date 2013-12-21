@@ -63,7 +63,16 @@
 - (RethinkDbClient*) row;
 - (RethinkDbClient*) row:(NSString*)key;
 
+- (RethinkDbClient*) eq:(id)expr;
+- (RethinkDbClient*) ne:(id)expr;
+
 - (RethinkDbClient*) gt:(id)expr;
+- (RethinkDbClient*) ge:(id)expr;
+
+- (RethinkDbClient*) lt:(id)expr;
+- (RethinkDbClient*) le:(id)expr;
+
+- (RethinkDbClient*) not;
 
 @property (retain) NSString* defaultDatabase;
  

@@ -104,7 +104,13 @@
     NSArray* rows = [query run: &error];
     XCTAssertNotNil(rows, @"filter failed: %@", error);
     XCTAssertEqual((int)[rows count], 4, @"there should only be 4 rows");
+
+    query = [table filter: [[[r row: @"number"] gt: [NSNumber numberWithInt: 5]] not]];
     
+    rows = [query run: &error];
+    XCTAssertNotNil(rows, @"filter failed: %@", error);
+    XCTAssertEqual((int)[rows count], 6, @"there should only be 6 rows");
+
     response = [[r tableDrop: @"filterTest"] run: &error];
     XCTAssertNotNil(response, @"tableDrop failed: %@", error);
     
