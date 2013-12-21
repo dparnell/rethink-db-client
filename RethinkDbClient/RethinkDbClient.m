@@ -750,7 +750,7 @@ static NSString* rethink_error = @"RethinkDB Error";
 #pragma mark -
 #pragma mark Transformations
 
-- (RethinkDbClient*) map:(RethinkDbMappingFunction)function {
+- (RethinkDbClient*) mapLike:(RethinkDbMappingFunction) function type:(Term_TermType) type {
     NSNumber* param_num = [NSNumber numberWithInteger: [self nextVariable]];
     
     RethinkDbClient* row = [self clientWithTerm: [self termWithType: Term_TermTypeVar andArg: param_num]];
@@ -760,9 +760,66 @@ static NSString* rethink_error = @"RethinkDB Error";
     NSArray* args = [NSArray arrayWithObject: param_num];
     Term* func = [self termWithType: Term_TermTypeFunc andArgs: [NSArray arrayWithObjects: args, body, nil]];
     
-    return [self clientWithTerm: [self termWithType: Term_TermTypeMap andArgs: [NSArray arrayWithObjects: self, func, nil]]];
+    return [self clientWithTerm: [self termWithType: type andArgs: [NSArray arrayWithObjects: self, func, nil]]];
 }
 
+- (RethinkDbClient*) map:(RethinkDbMappingFunction)function {
+    return [self mapLike: function type: Term_TermTypeMap];
+}
+
+- (RethinkDbClient*) withFields:(NSArray*)fields {
+    NSArray* args = [[NSArray arrayWithObject: self] arrayByAddingObjectsFromArray: fields];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeWithFields andArgs: args]];
+}
+
+- (RethinkDbClient*) concatMap:(RethinkDbMappingFunction)function {
+    return [self mapLike: function type: Term_TermTypeConcatmap];
+}
+
+- (RethinkDbClient*) orderBy:(id)order {
+    if([order isKindOfClass: [NSString class]]) {
+        return [self clientWithTerm: [self termWithType: Term_TermTypeOrderby andArgs: [NSArray arrayWithObjects: self, order, nil]]];
+    }
+    
+    NSArray* args = [[NSArray arrayWithObject: self] arrayByAddingObjectsFromArray: order];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeOrderby andArgs: args]];
+}
+
+- (RethinkDbClient*) skip:(NSInteger)count {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeSkip andArgs: [NSArray arrayWithObjects: self, [NSNumber numberWithInteger: count], nil]]];
+}
+
+- (RethinkDbClient*) limit:(NSInteger)count {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeLimit andArgs: [NSArray arrayWithObjects: self, [NSNumber numberWithInteger: count], nil]]];
+}
+
+- (RethinkDbClient*) slice:(NSInteger)start to:(NSInteger)end {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeSlice andArgs: [NSArray arrayWithObjects: self, [NSNumber numberWithInteger: start], [NSNumber numberWithInteger: end], nil]]];
+}
+
+- (RethinkDbClient*) nth:(NSInteger)index {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeNth andArgs: [NSArray arrayWithObjects: self, [NSNumber numberWithInteger: index], nil]]];
+}
+
+- (RethinkDbClient*) indexesOf:(id)datum {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeIndexesOf andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(datum), nil]]];
+}
+
+- (RethinkDbClient*) indexesOfPredicate:(RethinkDbMappingFunction)function {
+    return [self mapLike: function type: Term_TermTypeIndexesOf];
+}
+
+- (RethinkDbClient*) inEmpty {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeIsEmpty andArg: self]];
+}
+
+- (RethinkDbClient*) union:(RethinkDbClient*)sequence {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeUnion andArgs: [NSArray arrayWithObjects: self, sequence, nil]]];
+}
+
+- (RethinkDbClient*) sample:(NSInteger)count {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeSample andArgs: [NSArray arrayWithObjects: self, [NSNumber numberWithInteger: count], nil]]];
+}
 
 - (RethinkDbClient*) count {
     return [self clientWithTerm: [self termWithType: Term_TermTypeCount andArg: self]];

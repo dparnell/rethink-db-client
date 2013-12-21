@@ -91,6 +91,18 @@ typedef RethinkDbClient* (^RethinkDbMappingFunction)(RethinkDbClient* row);
 - (RethinkDbClient*) zip;
 
 - (RethinkDbClient*) map:(RethinkDbMappingFunction)function;
+- (RethinkDbClient*) withFields:(NSArray*)fields;
+- (RethinkDbClient*) concatMap:(RethinkDbMappingFunction)function;
+- (RethinkDbClient*) orderBy:(id)order;
+- (RethinkDbClient*) skip:(NSInteger)count;
+- (RethinkDbClient*) limit:(NSInteger)count;
+- (RethinkDbClient*) slice:(NSInteger)start to:(NSInteger)end;
+- (RethinkDbClient*) nth:(NSInteger)index;
+- (RethinkDbClient*) indexesOf:(id)datum;
+- (RethinkDbClient*) indexesOfPredicate:(RethinkDbMappingFunction)function;
+- (RethinkDbClient*) inEmpty;
+- (RethinkDbClient*) union:(RethinkDbClient*)sequence;
+- (RethinkDbClient*) sample:(NSInteger)count;
 
 - (RethinkDbClient*) count;
 
