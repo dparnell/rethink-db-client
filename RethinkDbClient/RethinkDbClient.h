@@ -57,21 +57,6 @@ typedef RethinkDbClient* (^RethinkDbGroupByFunction)(RethinkDbClient* row);
 - (RethinkDbClient*) filter:(id)predicate options:(NSDictionary*)options;
 - (RethinkDbClient*) filter:(id)predicate;
 
-- (RethinkDbClient*) eq:(id)expr;
-- (RethinkDbClient*) ne:(id)expr;
-
-- (RethinkDbClient*) gt:(id)expr;
-- (RethinkDbClient*) ge:(id)expr;
-
-- (RethinkDbClient*) lt:(id)expr;
-- (RethinkDbClient*) le:(id)expr;
-
-- (RethinkDbClient*) not;
-- (RethinkDbClient*) and:(id)expr;
-- (RethinkDbClient*) or:(id)expr;
-- (RethinkDbClient*) any:(NSArray*)expressions;
-- (RethinkDbClient*) all:(NSArray*)expressions;
-
 - (RethinkDbClient*) innerJoin:(id)sequence on:(RethinkDbJoinPredicate)predicate;
 - (RethinkDbClient*) outerJoin:(id)sequence on:(RethinkDbJoinPredicate)predicate;
 - (RethinkDbClient*) eqJoin:(NSString*)key to:(id)sequence options:(NSDictionary*)options;
@@ -126,6 +111,23 @@ typedef RethinkDbClient* (^RethinkDbGroupByFunction)(RethinkDbClient* row);
 - (RethinkDbClient*) keys;
 
 - (RethinkDbClient*) match:(NSString*)regex;
+
+- (RethinkDbClient*) add:(id)expr;
+- (RethinkDbClient*) sub:(id)expr;
+- (RethinkDbClient*) mul:(id)expr;
+- (RethinkDbClient*) div:(id)expr;
+- (RethinkDbClient*) mod:(id)expr;
+- (RethinkDbClient*) eq:(id)expr;
+- (RethinkDbClient*) ne:(id)expr;
+- (RethinkDbClient*) gt:(id)expr;
+- (RethinkDbClient*) ge:(id)expr;
+- (RethinkDbClient*) lt:(id)expr;
+- (RethinkDbClient*) le:(id)expr;
+- (RethinkDbClient*) not;
+- (RethinkDbClient*) and:(id)expr;
+- (RethinkDbClient*) or:(id)expr;
+- (RethinkDbClient*) any:(NSArray*)expressions;
+- (RethinkDbClient*) all:(NSArray*)expressions;
 
 @property (retain) NSString* defaultDatabase;
  

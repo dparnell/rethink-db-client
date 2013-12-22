@@ -287,7 +287,7 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [result build];
 }
 
-- (Term*) expr:(id)object {
+- (Term*) exprTerm:(id)object {
     if([object isKindOfClass: [Term class]]) {
         return object;
     }
@@ -327,7 +327,7 @@ static NSString* rethink_error = @"RethinkDB Error";
     
     if(args) {
         for(id arg in args) {
-            [term addArgs: [self expr: arg]];
+            [term addArgs: [self exprTerm: arg]];
         }
     }
     
@@ -335,7 +335,7 @@ static NSString* rethink_error = @"RethinkDB Error";
         [options enumerateKeysAndObjectsUsingBlock:^(NSString* key, id obj, BOOL *stop) {
             Term_AssocPair_Builder* pair = [Term_AssocPair_Builder new];
             pair.key = key;
-            pair.val = [self expr: obj];
+            pair.val = [self exprTerm: obj];
             
             [term addOptargs: [pair build]];
         }];
@@ -583,7 +583,7 @@ static NSString* rethink_error = @"RethinkDB Error";
     
     Term_Builder* term_builder = [Term_Builder new];
     term_builder.type = Term_TermTypeDb;
-    [term_builder addArgs: [self expr: name]];
+    [term_builder addArgs: [self exprTerm: name]];
     
     Query_AssocPair_Builder* args_builder = [Query_AssocPair_Builder new];
     args_builder.key = @"db";
@@ -642,53 +642,6 @@ static NSString* rethink_error = @"RethinkDB Error";
 
 - (RethinkDbClient*) filter:(id)predicate {
     return [self filter: predicate options: nil];
-}
-
-#pragma mark -
-#pragma mark Math and logic
-
-- (RethinkDbClient*) eq:(id)expr {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeEq andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
-}
-
-- (RethinkDbClient*) ne:(id)expr {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeNe andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
-}
-
-- (RethinkDbClient*) gt:(id)expr {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeGt andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
-}
-
-- (RethinkDbClient*) ge:(id)expr {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeGe andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
-}
-
-- (RethinkDbClient*) lt:(id)expr {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeLt andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
-}
-
-- (RethinkDbClient*) le:(id)expr {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeLe andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
-}
-
-- (RethinkDbClient*) not {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeNot andArg: self]];
-}
-
-- (RethinkDbClient*) and:(id)expr {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeAll andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
-}
-
-- (RethinkDbClient*) or:(id)expr {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeAny andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
-}
-
-- (RethinkDbClient*) any:(NSArray*)expressions {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeAny andArgs: expressions]];
-}
-
-- (RethinkDbClient*) all:(NSArray*)expressions {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeAll andArgs: expressions]];
 }
 
 #pragma mark -
@@ -1010,6 +963,73 @@ static NSString* rethink_error = @"RethinkDB Error";
 
 - (RethinkDbClient*) match:(NSString*)regex {
     return [self clientWithTerm: [self termWithType: Term_TermTypeMatch andArgs: [NSArray arrayWithObjects: self, regex, nil]]];
+}
+
+#pragma mark -
+#pragma mark Math and Logic
+
+- (RethinkDbClient*) add:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeAdd andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) sub:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeSub andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) mul:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeMul andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) div:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDiv andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) mod:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeMod andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) eq:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeEq andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) ne:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeNe andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) gt:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGt andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) ge:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGe andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) lt:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeLt andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) le:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeLe andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) not {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeNot andArg: self]];
+}
+
+- (RethinkDbClient*) and:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeAll andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) or:(id)expr {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeAny andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+}
+
+- (RethinkDbClient*) any:(NSArray*)expressions {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeAny andArgs: expressions]];
+}
+
+- (RethinkDbClient*) all:(NSArray*)expressions {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeAll andArgs: expressions]];
 }
 
 
