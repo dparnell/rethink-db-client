@@ -821,8 +821,105 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [self clientWithTerm: [self termWithType: Term_TermTypeSample andArgs: [NSArray arrayWithObjects: self, [NSNumber numberWithInteger: count], nil]]];
 }
 
+#pragma mark -
+#pragma mark Agregation
+
+- (RethinkDbClient*) reduce:(RethinkDbReductionFunction)function base:(id)base {
+    NSNumber* acc_num = [NSNumber numberWithInteger: [self nextVariable]];
+    NSNumber* val_num = [NSNumber numberWithInteger: [self nextVariable]];
+    
+    RethinkDbClient* acc = [self clientWithTerm: [self termWithType: Term_TermTypeVar andArg: acc_num]];
+    RethinkDbClient* val = [self clientWithTerm: [self termWithType: Term_TermTypeVar andArg: acc_num]];
+    
+    RethinkDbClient* body = function(acc, val);
+    
+    NSArray* arg_nums = [NSArray arrayWithObjects: acc_num, val_num, nil];
+    NSArray* args;
+    if(base) {
+        args = [NSArray arrayWithObjects: arg_nums, body, base, nil];
+    } else {
+        args = [NSArray arrayWithObjects: arg_nums, body, nil];
+    }
+    Term* func = [self termWithType: Term_TermTypeFunc andArgs: args];
+    
+    return [self clientWithTerm: [self termWithType: Term_TermTypeReduce andArgs: [NSArray arrayWithObjects: self, func, nil]]];
+}
+
+- (RethinkDbClient*) reduce:(RethinkDbReductionFunction)function {
+    return [self reduce: function base: nil];
+}
+
 - (RethinkDbClient*) count {
     return [self clientWithTerm: [self termWithType: Term_TermTypeCount andArg: self]];
+}
+
+- (RethinkDbClient*) distinct {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDistinct andArg: self]];
+}
+
+- (RethinkDbClient*) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction withBase:(id)base {
+    NSNumber* group_num = [NSNumber numberWithInteger: [self nextVariable]];
+    NSNumber* map_num = [NSNumber numberWithInteger: [self nextVariable]];
+    NSNumber* acc_num = [NSNumber numberWithInteger: [self nextVariable]];
+    NSNumber* val_num = [NSNumber numberWithInteger: [self nextVariable]];
+    
+    RethinkDbClient* group_var = [self clientWithTerm: [self termWithType: Term_TermTypeVar andArg: group_num]];
+    RethinkDbClient* group_body = groupFunction(group_var);
+    
+    RethinkDbClient* map_row = [self clientWithTerm: [self termWithType: Term_TermTypeVar andArg: map_num]];
+    RethinkDbClient* map_body = mapFunction(map_row);
+    
+    RethinkDbClient* acc = [self clientWithTerm: [self termWithType: Term_TermTypeVar andArg: acc_num]];
+    RethinkDbClient* val = [self clientWithTerm: [self termWithType: Term_TermTypeVar andArg: acc_num]];
+    
+    RethinkDbClient* reduce_body = reduceFunction(acc, val);
+    
+    RethinkDbClient* group_func = [self clientWithTerm: [self termWithType: Term_TermTypeFunc andArgs: [NSArray arrayWithObjects: [NSArray arrayWithObject: group_num], group_body, nil]]];
+    RethinkDbClient* map_func = [self clientWithTerm: [self termWithType: Term_TermTypeFunc andArgs: [NSArray arrayWithObjects: [NSArray arrayWithObject: map_num], map_body, nil]]];
+    RethinkDbClient* reduce_func = [self clientWithTerm: [self termWithType: Term_TermTypeFunc andArgs: [NSArray arrayWithObjects: [NSArray arrayWithObjects: acc_num, val_num, nil], reduce_body, nil]]];
+    
+    NSArray* args;
+    if(base) {
+        args = [NSArray arrayWithObjects: self, group_func, map_func, reduce_func, base, nil];
+    } else {
+        args = [NSArray arrayWithObjects: self, group_func, map_func, reduce_func, nil];
+    }
+    
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGroupedMapReduce andArgs: args]];
+}
+
+- (RethinkDbClient*) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction {
+    return [self group: groupFunction map: mapFunction andReduce: reduceFunction withBase: nil];
+}
+
+- (RethinkDbClient*) groupBy:(id)columns reduce:(NSDictionary*)reductionObject {
+    if([columns isKindOfClass: [NSString class]]) {
+        columns = [NSArray arrayWithObject: columns];
+    }
+    
+    Term* reduction_literal = [self termWithType: Term_TermTypeMakeObj andArg: reductionObject];    
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGroupby andArgs: [NSArray arrayWithObjects: self, columns, reduction_literal, nil]]];
+}
+
+- (RethinkDbClient*) groupByAndCount:(id)columns {
+    return [self groupBy: columns reduce: [NSDictionary dictionaryWithObject: @"" forKey: @"COUNT"]];
+}
+
+- (RethinkDbClient*) groupBy:(id)columns sum:(NSString*)attribute {
+    return [self groupBy: columns reduce: [NSDictionary dictionaryWithObject: attribute forKey: @"SUM"]];
+}
+
+- (RethinkDbClient*) groupBy:(id)columns average:(NSString*)attribute {
+    return [self groupBy: columns reduce: [NSDictionary dictionaryWithObject: attribute forKey: @"AVG"]];
+}
+
+- (RethinkDbClient*) contains:(id)values {
+    if(![values isKindOfClass: [NSArray class]]) {
+        values = [NSArray arrayWithObject: CHECK_NULL(values)];
+    }
+    
+    NSArray* args = [[NSArray arrayWithObject: self] arrayByAddingObjectsFromArray: values];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeContains andArgs: args]];
 }
 
 @end

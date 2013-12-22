@@ -11,6 +11,8 @@
 @class RethinkDbClient;
 typedef RethinkDbClient* (^RethinkDbJoinPredicate)(RethinkDbClient* left, RethinkDbClient* right);
 typedef RethinkDbClient* (^RethinkDbMappingFunction)(RethinkDbClient* row);
+typedef RethinkDbClient* (^RethinkDbReductionFunction)(RethinkDbClient* accumulator, RethinkDbClient* value);
+typedef RethinkDbClient* (^RethinkDbGroupByFunction)(RethinkDbClient* row);
 
 @interface RethinkDbClient : NSObject
 
@@ -104,7 +106,17 @@ typedef RethinkDbClient* (^RethinkDbMappingFunction)(RethinkDbClient* row);
 - (RethinkDbClient*) union:(RethinkDbClient*)sequence;
 - (RethinkDbClient*) sample:(NSInteger)count;
 
+- (RethinkDbClient*) reduce:(RethinkDbReductionFunction)function base:(id)base;
+- (RethinkDbClient*) reduce:(RethinkDbReductionFunction)function;
 - (RethinkDbClient*) count;
+- (RethinkDbClient*) dictinct;
+- (RethinkDbClient*) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction withBase:(id)base;
+- (RethinkDbClient*) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction;
+- (RethinkDbClient*) groupBy:(id)columns reduce:(NSDictionary*)reductionObject;
+- (RethinkDbClient*) groupByAndCount:(id)columns;
+- (RethinkDbClient*) groupBy:(id)columns sum:(NSString*)attribute;
+- (RethinkDbClient*) groupBy:(id)columns average:(NSString*)attribute;
+- (RethinkDbClient*) contains:(id)values;
 
 @property (retain) NSString* defaultDatabase;
  
