@@ -129,6 +129,27 @@ typedef RethinkDbClient* (^RethinkDbGroupByFunction)(RethinkDbClient* row);
 - (RethinkDbClient*) any:(NSArray*)expressions;
 - (RethinkDbClient*) all:(NSArray*)expressions;
 
-@property (retain) NSString* defaultDatabase;
- 
+- (RethinkDbClient*) now;
+- (RethinkDbClient*) timeWithYear:(NSInteger)year month:(NSInteger)month day:(NSInteger)day timezone:(NSString*)time_zone;
+- (RethinkDbClient*) timeWithYear:(NSInteger)year month:(NSInteger)month day:(NSInteger)day hour:(NSInteger)hour minute:(NSInteger)minute seconds:(NSInteger)seconds timezone:(NSString*)time_zone;
+- (RethinkDbClient*) time:(NSDate*)date;
+- (RethinkDbClient*) epochTime:(id)seconds;
+- (RethinkDbClient*) ISO8601:(id)time;
+- (RethinkDbClient*) inTimezone:(id)time_zone;
+- (RethinkDbClient*) timezone;
+- (RethinkDbClient*) during:(id)from to:(id)to options:(NSDictionary*)options;
+- (RethinkDbClient*) during:(id)from to:(id)to;
+- (RethinkDbClient*) date;
+- (RethinkDbClient*) timeOfDay;
+- (RethinkDbClient*) year;
+- (RethinkDbClient*) month;
+- (RethinkDbClient*) day;
+- (RethinkDbClient*) dayOfWeek;
+- (RethinkDbClient*) dayOfYear;
+- (RethinkDbClient*) hours;
+- (RethinkDbClient*) minutes;
+- (RethinkDbClient*) seconds;
+- (RethinkDbClient*) toISO8601;
+- (RethinkDbClient*) toEpochTime;
+
 @end

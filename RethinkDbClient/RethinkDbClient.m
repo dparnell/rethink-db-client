@@ -579,7 +579,6 @@ static NSString* rethink_error = @"RethinkDB Error";
     Query_Builder* query = [self queryBuilder];
     
     RethinkDbClient* db = [[RethinkDbClient alloc] initWithConnection: self];
-    db.defaultDatabase = name;
     
     Term_Builder* term_builder = [Term_Builder new];
     term_builder.type = Term_TermTypeDb;
@@ -837,7 +836,7 @@ static NSString* rethink_error = @"RethinkDB Error";
 }
 
 - (RethinkDbClient*) groupByAndCount:(id)columns {
-    return [self groupBy: columns reduce: [NSDictionary dictionaryWithObject: @"" forKey: @"COUNT"]];
+    return [self groupBy: columns reduce: [NSDictionary dictionaryWithObject: [NSNumber numberWithBool: YES] forKey: @"COUNT"]];
 }
 
 - (RethinkDbClient*) groupBy:(id)columns sum:(NSString*)attribute {
@@ -1032,5 +1031,118 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [self clientWithTerm: [self termWithType: Term_TermTypeAll andArgs: expressions]];
 }
 
+#pragma mark -
+#pragma mark Dates and Times
+
+- (RethinkDbClient*) now {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeNow]];
+}
+
+- (RethinkDbClient*) timeWithYear:(NSInteger)year month:(NSInteger)month day:(NSInteger)day timezone:(NSString*)time_zone {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeTime andArgs: [NSArray arrayWithObjects:
+                                                                                 [NSNumber numberWithInteger: year],
+                                                                                 [NSNumber numberWithInteger: month],
+                                                                                 [NSNumber numberWithInteger: day],
+                                                                                 CHECK_NULL(time_zone),
+                                                                                 nil]]];
+}
+
+- (RethinkDbClient*) timeWithYear:(NSInteger)year month:(NSInteger)month day:(NSInteger)day hour:(NSInteger)hour minute:(NSInteger)minute seconds:(NSInteger)seconds timezone:(NSString*)time_zone {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeTime andArgs: [NSArray arrayWithObjects:
+                                                                                 [NSNumber numberWithInteger: year],
+                                                                                 [NSNumber numberWithInteger: month],
+                                                                                 [NSNumber numberWithInteger: day],
+                                                                                 [NSNumber numberWithInteger: hour],
+                                                                                 [NSNumber numberWithInteger: minute],
+                                                                                 [NSNumber numberWithInteger: seconds],
+                                                                                 CHECK_NULL(time_zone),
+                                                                                 nil]]];
+}
+
+- (RethinkDbClient*) time:(NSDate*)date {
+    NSCalendar* calendar = [NSCalendar currentCalendar];
+    NSDateComponents* comps = [calendar components: NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond | NSCalendarUnitTimeZone fromDate: date];
+    
+    return [self timeWithYear: comps.year month: comps.month day: comps.day hour: comps.hour minute: comps.minute seconds: comps.second timezone: [comps.timeZone name]];
+}
+
+- (RethinkDbClient*) epochTime:(id)seconds {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeEpochTime andArg: seconds]];
+}
+
+- (RethinkDbClient*) ISO8601:(id)time {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeIso8601 andArg: time]];
+}
+
+- (RethinkDbClient*) inTimezone:(id)time_zone {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeInTimezone andArg: time_zone]];
+}
+
+- (RethinkDbClient*) timezone {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeTimezone andArg: self]];
+}
+
+- (RethinkDbClient*) during:(id)from to:(id)to options:(NSDictionary*)options {
+    if([from isKindOfClass: [NSDate class]]) {
+        from = [self time: from];
+    }
+    if([to isKindOfClass: [NSDate class]]) {
+        to = [self time: to];
+    }
+    
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDuring andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(from), CHECK_NULL(to), nil]]];
+}
+
+- (RethinkDbClient*) during:(id)from to:(id)to {
+    return [self during: from to: to options: nil];
+}
+
+- (RethinkDbClient*) date {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDate]];
+}
+
+- (RethinkDbClient*) timeOfDay {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeTimeOfDay andArg: self]];
+}
+
+- (RethinkDbClient*) year {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeYear andArg: self]];
+}
+
+- (RethinkDbClient*) month {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeMonth andArg: self]];
+}
+
+- (RethinkDbClient*) day {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDay andArg: self]];
+}
+
+- (RethinkDbClient*) dayOfWeek {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDayOfWeek andArg: self]];
+}
+
+- (RethinkDbClient*) dayOfYear {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDayOfYear andArg: self]];
+}
+
+- (RethinkDbClient*) hours {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeHours andArg: self]];
+}
+
+- (RethinkDbClient*) minutes {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeMinutes andArg: self]];
+}
+
+- (RethinkDbClient*) seconds {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeSeconds andArg: self]];
+}
+
+- (RethinkDbClient*) toISO8601 {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeToIso8601 andArg: self]];
+}
+
+- (RethinkDbClient*) toEpochTime {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeToEpochTime andArg: self]];
+}
 
 @end
