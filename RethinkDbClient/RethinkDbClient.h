@@ -125,6 +125,8 @@ typedef RethinkDbClient* (^RethinkDbGroupByFunction)(RethinkDbClient* row);
 - (RethinkDbClient*) changeAt:(NSUInteger)index value:(id)value;
 - (RethinkDbClient*) keys;
 
+- (RethinkDbClient*) match:(NSString*)regex;
+
 @property (retain) NSString* defaultDatabase;
  
 @end

@@ -1005,4 +1005,12 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [self clientWithTerm: [self termWithType: Term_TermTypeKeys andArg: self]];
 }
 
+#pragma mark -
+#pragma mark String manipulations
+
+- (RethinkDbClient*) match:(NSString*)regex {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeMatch andArgs: [NSArray arrayWithObjects: self, regex, nil]]];
+}
+
+
 @end
