@@ -1145,4 +1145,22 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [self clientWithTerm: [self termWithType: Term_TermTypeToEpochTime andArg: self]];
 }
 
+#pragma mark -
+#pragma mark Control Structures
+
+- (RethinkDbClient*) do:(RethinkDbExpressionFunction)expression withArguments:(NSArray*)arguments {
+    NSMutableArray* arg_nums = [NSMutableArray arrayWithCapacity: [arguments count]];
+    NSMutableArray* args = [NSMutableArray arrayWithCapacity: [arguments count]];
+    [arguments enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        NSNumber* arg_num = [NSNumber numberWithInteger: [self nextVariable]];
+        [arg_nums addObject: arg_num];
+        [args addObject: [self clientWithTerm: [self termWithType: Term_TermTypeVar andArg: arg_num]]];
+    }];
+    
+    RethinkDbClient* body = expression(args);
+    Term* func = [self termWithType: Term_TermTypeFunc andArgs: [NSArray arrayWithObjects: arg_nums, body, nil]];
+    
+    return [self clientWithTerm: [self termWithType: Term_TermTypeFuncall andArgs: [[NSArray arrayWithObject: func] arrayByAddingObjectsFromArray: arguments]]];
+}
+
 @end

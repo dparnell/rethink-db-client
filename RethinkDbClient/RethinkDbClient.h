@@ -13,6 +13,7 @@ typedef RethinkDbClient* (^RethinkDbJoinPredicate)(RethinkDbClient* left, Rethin
 typedef RethinkDbClient* (^RethinkDbMappingFunction)(RethinkDbClient* row);
 typedef RethinkDbClient* (^RethinkDbReductionFunction)(RethinkDbClient* accumulator, RethinkDbClient* value);
 typedef RethinkDbClient* (^RethinkDbGroupByFunction)(RethinkDbClient* row);
+typedef RethinkDbClient* (^RethinkDbExpressionFunction)(NSArray* arguments);
 
 @interface RethinkDbClient : NSObject
 
@@ -151,5 +152,7 @@ typedef RethinkDbClient* (^RethinkDbGroupByFunction)(RethinkDbClient* row);
 - (RethinkDbClient*) seconds;
 - (RethinkDbClient*) toISO8601;
 - (RethinkDbClient*) toEpochTime;
+
+- (RethinkDbClient*) do:(RethinkDbExpressionFunction)expression withArguments:(NSArray*)arguments;
 
 @end

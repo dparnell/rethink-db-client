@@ -139,4 +139,22 @@
     
     XCTAssertEqual((int)[count integerValue], 39934, @"count didn't return the right value");
 }
+
+- (void) testControlStructures {
+    NSError* error = nil;
+    XCTAssertNotNil(r, @"Connection failed");
+    RethinkDbClient* db = [r db: @"test"];
+    
+    RethinkDbClient* query = [db do:^RethinkDbClient *(NSArray *arguments) {
+        RethinkDbClient* arg1 = [arguments objectAtIndex: 0];
+        RethinkDbClient* arg2 = [arguments objectAtIndex: 1];
+        
+        return [arg1 add: arg2];
+    } withArguments: [NSArray arrayWithObjects: [NSNumber numberWithInt: 3], [NSNumber numberWithInt: 4], nil]];
+    
+    id response = [query run: &error];
+    XCTAssertNotNil(response, @"query failed: %@", error);
+    XCTAssertEqualObjects(response, [NSNumber numberWithInt: 7], @"the result should be 7");
+}
+
 @end
