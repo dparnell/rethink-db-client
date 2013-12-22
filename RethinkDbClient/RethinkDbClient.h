@@ -154,5 +154,16 @@ typedef RethinkDbClient* (^RethinkDbExpressionFunction)(NSArray* arguments);
 - (RethinkDbClient*) toEpochTime;
 
 - (RethinkDbClient*) do:(RethinkDbExpressionFunction)expression withArguments:(NSArray*)arguments;
+- (RethinkDbClient*) branch:(RethinkDbClient*) test then:(RethinkDbClient*) then otherwise:(RethinkDbClient*) otherwise;
+- (RethinkDbClient*) forEach:(RethinkDbMappingFunction)function;
+- (RethinkDbClient*) error:(id)message;
+- (RethinkDbClient*) error;
+- (RethinkDbClient*) default:(id)value;
+- (RethinkDbClient*) expr:(id)value;
+- (RethinkDbClient*) js:(NSString*)script;
+- (RethinkDbClient*) coerceTo:(NSString*)type;
+- (RethinkDbClient*) typeOf;
+- (RethinkDbClient*) info;
+- (RethinkDbClient*) json:(NSString*)json;
 
 @end

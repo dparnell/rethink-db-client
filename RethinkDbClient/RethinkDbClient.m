@@ -1163,4 +1163,52 @@ static NSString* rethink_error = @"RethinkDB Error";
     return [self clientWithTerm: [self termWithType: Term_TermTypeFuncall andArgs: [[NSArray arrayWithObject: func] arrayByAddingObjectsFromArray: arguments]]];
 }
 
+- (RethinkDbClient*) branch:(RethinkDbClient*) test then:(RethinkDbClient*) then otherwise:(RethinkDbClient*) otherwise {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeBranch andArgs: [NSArray arrayWithObjects: test, then, otherwise, nil]]];
+}
+
+- (RethinkDbClient*) forEach:(RethinkDbMappingFunction)function {
+    return [self mapLike: function type: Term_TermTypeForeach];
+}
+
+- (RethinkDbClient*) error:(id)message {
+    if(message) {
+        return [self clientWithTerm: [self termWithType: Term_TermTypeError andArg: message]];
+    } else {
+        return [self clientWithTerm: [self termWithType: Term_TermTypeError]];
+    }
+}
+
+- (RethinkDbClient*) error {
+    return [self error: nil];
+}
+
+- (RethinkDbClient*) default:(id)value {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDefault andArgs: [NSArray arrayWithObjects: self, value, nil]]];
+}
+
+- (RethinkDbClient*) expr:(id)value {
+    return [self clientWithTerm: [self exprTerm: value]];
+}
+
+- (RethinkDbClient*) js:(NSString*)script {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeJavascript andArg: script]];
+}
+
+- (RethinkDbClient*) coerceTo:(NSString*)type {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeCoerceTo andArgs: [NSArray arrayWithObjects: self, type, nil]]];
+}
+
+- (RethinkDbClient*) typeOf {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeTypeof andArg: self]];
+}
+
+- (RethinkDbClient*) info {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeInfo andArg: self]];
+
+}
+- (RethinkDbClient*) json:(NSString*)json {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeJson andArg: json]];
+}
+
 @end
