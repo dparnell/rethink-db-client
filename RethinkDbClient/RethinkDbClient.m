@@ -645,24 +645,6 @@ static NSString* rethink_error = @"RethinkDB Error";
 }
 
 #pragma mark -
-#pragma mark Document manipulation
-
-- (RethinkDbClient*) row {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeImplicitVar]];
-}
-
-- (RethinkDbClient*) row:(NSString*)key {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeGetField andArgs: [NSArray arrayWithObjects:
-                                                                                     [self termWithType: Term_TermTypeImplicitVar],
-                                                                                     CHECK_NULL(key),
-                                                                                     nil]]];
-}
-
-- (RethinkDbClient*) field:(NSString*)key {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeGetField andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(key), nil]]];
-}
-
-#pragma mark -
 #pragma mark Math and logic
 
 - (RethinkDbClient*) eq:(id)expr {
@@ -920,6 +902,107 @@ static NSString* rethink_error = @"RethinkDB Error";
     
     NSArray* args = [[NSArray arrayWithObject: self] arrayByAddingObjectsFromArray: values];
     return [self clientWithTerm: [self termWithType: Term_TermTypeContains andArgs: args]];
+}
+
+#pragma mark -
+#pragma mark Document manipulation
+
+- (RethinkDbClient*) row {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeImplicitVar]];
+}
+
+- (RethinkDbClient*) row:(NSString*)key {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGetField andArgs: [NSArray arrayWithObjects:
+                                                                                     [self termWithType: Term_TermTypeImplicitVar],
+                                                                                     CHECK_NULL(key),
+                                                                                     nil]]];
+}
+
+- (RethinkDbClient*) pluck:(id)fields {
+    if([fields isKindOfClass: [NSString class]]) {
+        fields = [NSArray arrayWithObject: fields];
+    }
+    
+    NSArray* args = [[NSArray arrayWithObject: self] arrayByAddingObjectsFromArray: fields];
+    return [self clientWithTerm: [self termWithType: Term_TermTypePluck andArgs: args]];
+}
+
+- (RethinkDbClient*) without:(id)fields {
+    if([fields isKindOfClass: [NSString class]]) {
+        fields = [NSArray arrayWithObject: fields];
+    }
+    
+    NSArray* args = [[NSArray arrayWithObject: self] arrayByAddingObjectsFromArray: fields];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeWithout andArgs: args]];
+}
+
+- (RethinkDbClient*) merge:(id)object {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeMerge andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(object), nil]]];
+}
+
+- (RethinkDbClient*) append:(id)object {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeAppend andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(object), nil]]];
+}
+
+- (RethinkDbClient*) prepend:(id)object {
+    return [self clientWithTerm: [self termWithType: Term_TermTypePrepend andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(object), nil]]];
+}
+
+- (RethinkDbClient*) difference:(NSArray *)array {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDifference andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(array), nil]]];
+}
+
+- (RethinkDbClient*) setInsert:(id)value {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeSetInsert andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(value), nil]]];
+}
+
+- (RethinkDbClient*) setUnion:(NSArray*)array {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeSetUnion andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(array), nil]]];
+}
+
+- (RethinkDbClient*) setIntersection:(NSArray*)array {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeSetIntersection andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(array), nil]]];
+}
+
+- (RethinkDbClient*) setDifference:(NSArray*)array {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeSetDifference andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(array), nil]]];
+}
+
+- (RethinkDbClient*) field:(NSString*)key {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGetField andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(key), nil]]];
+}
+
+- (RethinkDbClient*) hasFields:(id)fields {
+    if([fields isKindOfClass: [NSString class]]) {
+        fields = [NSArray arrayWithObject: fields];
+    }
+    
+    NSArray* args = [[NSArray arrayWithObject: self] arrayByAddingObjectsFromArray: fields];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeHasFields andArgs: args]];
+}
+
+- (RethinkDbClient*) insert:(id)object at:(NSUInteger)index {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeInsertAt andArgs: [NSArray arrayWithObjects: self, [NSNumber numberWithInteger: index], CHECK_NULL(object), nil]]];
+}
+
+- (RethinkDbClient*) splice:(NSArray*)objects at:(NSUInteger)index {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeSpliceAt andArgs: [NSArray arrayWithObjects: self, [NSNumber numberWithInteger: index], CHECK_NULL(objects), nil]]];
+}
+
+- (RethinkDbClient*) deleteAt:(NSUInteger)index to:(NSUInteger)end_index {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDeleteAt andArgs: [NSArray arrayWithObjects: self, [NSNumber numberWithInteger: index], [NSNumber numberWithInteger: end_index], nil]]];
+}
+
+- (RethinkDbClient*) deleteAt:(NSUInteger)index {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDeleteAt andArgs: [NSArray arrayWithObjects: self, [NSNumber numberWithInteger: index], nil]]];
+}
+
+- (RethinkDbClient*) changeAt:(NSUInteger)index value:(id)value {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeChangeAt andArgs: [NSArray arrayWithObjects: self, [NSNumber numberWithInteger: index], CHECK_NULL(value), nil]]];
+}
+
+- (RethinkDbClient*) keys {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeKeys andArg: self]];
 }
 
 @end

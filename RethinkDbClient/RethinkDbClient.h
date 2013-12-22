@@ -22,8 +22,6 @@ typedef RethinkDbClient* (^RethinkDbGroupByFunction)(RethinkDbClient* row);
 - (id) run:(NSError**)error;
 
 - (RethinkDbClient*) db: (NSString*)name;
-
-
 - (RethinkDbClient*) dbCreate:(NSString*)name;
 - (RethinkDbClient*) dbDrop:(NSString*)name;
 - (RethinkDbClient*) dbList;
@@ -38,38 +36,26 @@ typedef RethinkDbClient* (^RethinkDbGroupByFunction)(RethinkDbClient* row);
 - (RethinkDbClient*) indexList;
 - (RethinkDbClient*) indexStatus:(id)names;
 - (RethinkDbClient*) indexWait:(id)names;
-
 - (RethinkDbClient*) table:(NSString*)name options:(NSDictionary*)options;
 - (RethinkDbClient*) table:(NSString*)name;
 
 - (RethinkDbClient*) insert:(id)object options:(NSDictionary*)options;
 - (RethinkDbClient*) insert:(id)object;
-
 - (RethinkDbClient*) update:(id)object options:(NSDictionary*)options;
 - (RethinkDbClient*) update:(id)object;
-
 - (RethinkDbClient*) replace:(id)object options:(NSDictionary*)options;
 - (RethinkDbClient*) replace:(id)object;
-
 - (RethinkDbClient*) delete:(NSDictionary*)options;
 - (RethinkDbClient*) delete;
-
 - (RethinkDbClient*) sync;
 
 - (RethinkDbClient*) get:(id)key;
 - (RethinkDbClient*) getAll:(NSArray*)keys options:(NSDictionary*)options;
 - (RethinkDbClient*) getAll:(NSArray *)keys;
-
 - (RethinkDbClient*) between:(id)lower and:(id)upper options:(NSDictionary*)options;
 - (RethinkDbClient*) between:(id)lower and:(id)upper;
-
 - (RethinkDbClient*) filter:(id)predicate options:(NSDictionary*)options;
 - (RethinkDbClient*) filter:(id)predicate;
-
-- (RethinkDbClient*) row;
-- (RethinkDbClient*) row:(NSString*)key;
-
-- (RethinkDbClient*) field:(NSString*)key;
 
 - (RethinkDbClient*) eq:(id)expr;
 - (RethinkDbClient*) ne:(id)expr;
@@ -109,7 +95,7 @@ typedef RethinkDbClient* (^RethinkDbGroupByFunction)(RethinkDbClient* row);
 - (RethinkDbClient*) reduce:(RethinkDbReductionFunction)function base:(id)base;
 - (RethinkDbClient*) reduce:(RethinkDbReductionFunction)function;
 - (RethinkDbClient*) count;
-- (RethinkDbClient*) dictinct;
+- (RethinkDbClient*) distinct;
 - (RethinkDbClient*) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction withBase:(id)base;
 - (RethinkDbClient*) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction;
 - (RethinkDbClient*) groupBy:(id)columns reduce:(NSDictionary*)reductionObject;
@@ -117,6 +103,27 @@ typedef RethinkDbClient* (^RethinkDbGroupByFunction)(RethinkDbClient* row);
 - (RethinkDbClient*) groupBy:(id)columns sum:(NSString*)attribute;
 - (RethinkDbClient*) groupBy:(id)columns average:(NSString*)attribute;
 - (RethinkDbClient*) contains:(id)values;
+
+- (RethinkDbClient*) row;
+- (RethinkDbClient*) row:(NSString*)key;
+- (RethinkDbClient*) pluck:(id)fields;
+- (RethinkDbClient*) without:(id)fields;
+- (RethinkDbClient*) merge:(id)object;
+- (RethinkDbClient*) append:(id)object;
+- (RethinkDbClient*) prepend:(id)object;
+- (RethinkDbClient*) difference:(NSArray*)array;
+- (RethinkDbClient*) setInsert:(id)value;
+- (RethinkDbClient*) setUnion:(NSArray*)array;
+- (RethinkDbClient*) setIntersection:(NSArray*)array;
+- (RethinkDbClient*) setDifference:(NSArray*)array;
+- (RethinkDbClient*) field:(NSString*)key;
+- (RethinkDbClient*) hasFields:(id)fields;
+- (RethinkDbClient*) insert:(id)object at:(NSUInteger)index;
+- (RethinkDbClient*) splice:(NSArray*)objects at:(NSUInteger)index;
+- (RethinkDbClient*) deleteAt:(NSUInteger)index to:(NSUInteger)end_index;
+- (RethinkDbClient*) deleteAt:(NSUInteger)index;
+- (RethinkDbClient*) changeAt:(NSUInteger)index value:(id)value;
+- (RethinkDbClient*) keys;
 
 @property (retain) NSString* defaultDatabase;
  
