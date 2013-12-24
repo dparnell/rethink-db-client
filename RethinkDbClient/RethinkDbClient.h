@@ -8,93 +8,134 @@
 
 #import <Foundation/Foundation.h>
 
-@class RethinkDbClient;
-typedef RethinkDbClient* (^RethinkDbJoinPredicate)(RethinkDbClient* left, RethinkDbClient* right);
-typedef RethinkDbClient* (^RethinkDbMappingFunction)(RethinkDbClient* row);
-typedef RethinkDbClient* (^RethinkDbReductionFunction)(RethinkDbClient* accumulator, RethinkDbClient* value);
-typedef RethinkDbClient* (^RethinkDbGroupByFunction)(RethinkDbClient* row);
-typedef RethinkDbClient* (^RethinkDbExpressionFunction)(NSArray* arguments);
+@protocol RethinkDBRunnable;
+@protocol RethinkDBSequence;
+@protocol RethinkDBObject;
+@protocol RethinkDBArray;
+
+typedef id <RethinkDBRunnable> (^RethinkDbJoinPredicate)(id <RethinkDBSequence> left, id <RethinkDBSequence> right);
+typedef id <RethinkDBRunnable> (^RethinkDbMappingFunction)(id <RethinkDBObject> row);
+typedef id <RethinkDBRunnable> (^RethinkDbReductionFunction)(id <RethinkDBObject> accumulator, id <RethinkDBObject> value);
+typedef id <RethinkDBRunnable> (^RethinkDbGroupByFunction)(id <RethinkDBObject> row);
+typedef id <RethinkDBRunnable> (^RethinkDbExpressionFunction)(NSArray* arguments);
+
+@protocol RethinkDBRunnable <NSObject>
+
+- (id) run:(NSError**)error;
+- (id <RethinkDBObject>) row;
+- (id <RethinkDBObject>) row:(NSString*)key;
+
+@end
+
+@protocol RethinkDBObject <RethinkDBRunnable>
+
+- (RethinkDbClient*) pluck:(id)fields;
+- (RethinkDbClient*) without:(id)fields;
+- (RethinkDbClient*) merge:(id)object;
+
+@end
+
+@protocol RethinkDBSequence <RethinkDBObject>
+
+- (id <RethinkDBSequence>) filter:(id)predicate options:(NSDictionary*)options;
+- (id <RethinkDBSequence>) filter:(id)predicate;
+- (id <RethinkDBSequence>) innerJoin:(id <RethinkDBSequence>)sequence on:(RethinkDbJoinPredicate)predicate;
+- (id <RethinkDBSequence>) outerJoin:(id <RethinkDBSequence>)sequence on:(RethinkDbJoinPredicate)predicate;
+- (id <RethinkDBSequence>) eqJoin:(NSString*)key to:(id <RethinkDBSequence>)sequence options:(NSDictionary*)options;
+- (id <RethinkDBSequence>) eqJoin:(NSString*)key to:(id <RethinkDBSequence>)sequence;
+- (id <RethinkDBSequence>) zip;
+
+- (id <RethinkDBSequence>) map:(RethinkDbMappingFunction)function;
+- (id <RethinkDBSequence>) withFields:(NSArray*)fields;
+- (id <RethinkDBSequence>) concatMap:(RethinkDbMappingFunction)function;
+- (id <RethinkDBSequence>) orderBy:(id)order;
+- (id <RethinkDBSequence>) skip:(NSInteger)count;
+- (id <RethinkDBSequence>) limit:(NSInteger)count;
+- (id <RethinkDBSequence>) slice:(NSInteger)start to:(NSInteger)end;
+- (id <RethinkDBObject>) nth:(NSInteger)index;
+- (id <RethinkDBArray>) indexesOf:(id)datum;
+- (id <RethinkDBArray>) indexesOfPredicate:(RethinkDbMappingFunction)function;
+- (id <RethinkDBObject>) inEmpty;
+- (id <RethinkDBArray>) union:(id <RethinkDBSequence>)sequence;
+- (id <RethinkDBSequence>) sample:(NSInteger)count;
+
+- (id <RethinkDBObject>) reduce:(RethinkDbReductionFunction)function base:(id)base;
+- (id <RethinkDBObject>) reduce:(RethinkDbReductionFunction)function;
+- (id <RethinkDBObject>) count;
+- (id <RethinkDBArray>) distinct;
+- (id <RethinkDBObject>) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction withBase:(id)base;
+- (id <RethinkDBObject>) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction;
+- (id <RethinkDBArray>) groupBy:(id)columns reduce:(NSDictionary*)reductionObject;
+- (id <RethinkDBArray>) groupByAndCount:(id)columns;
+- (id <RethinkDBArray>) groupBy:(id)columns sum:(NSString*)attribute;
+- (id <RethinkDBArray>) groupBy:(id)columns average:(NSString*)attribute;
+- (id <RethinkDBObject>) contains:(id)values;
+
+
+@end
+
+@protocol RethinkDBArray <RethinkDBSequence>
+
+
+@end
+
+@protocol RethinkDBStream <RethinkDBSequence>
+
+
+@end
+
+@protocol RethinkDBTable <RethinkDBStream>
+
+- (id <RethinkDBObject>) insert:(id)object options:(NSDictionary*)options;
+- (id <RethinkDBObject>) insert:(id)object;
+- (id <RethinkDBObject>) update:(id)object options:(NSDictionary*)options;
+- (id <RethinkDBObject>) update:(id)object;
+- (id <RethinkDBObject>) replace:(id)object options:(NSDictionary*)options;
+- (id <RethinkDBObject>) replace:(id)object;
+- (id <RethinkDBObject>) delete:(NSDictionary*)options;
+- (id <RethinkDBObject>) delete;
+- (id <RethinkDBObject>) sync;
+
+- (id <RethinkDBObject>) get:(id)key;
+- (id <RethinkDBSequence>) getAll:(NSArray*)keys options:(NSDictionary*)options;
+- (id <RethinkDBSequence>) getAll:(NSArray *)keys;
+- (id <RethinkDBSequence>) between:(id)lower and:(id)upper options:(NSDictionary*)options;
+- (id <RethinkDBSequence>) between:(id)lower and:(id)upper;
+
+@end
+
+
+@protocol RethinkDBDatabase <RethinkDBRunnable>
+
+- (id <RethinkDBObject>) tableCreate:(NSString*)name options:(NSDictionary*)options;
+- (id <RethinkDBObject>) tableCreate:(NSString*)name;
+- (id <RethinkDBObject>) tableDrop:(NSString*)name;
+- (id <RethinkDBArray>) tableList;
+- (id <RethinkDBObject>) indexCreate:(NSString*)name;
+- (id <RethinkDBObject>) indexDrop:(NSString*)name;
+- (id <RethinkDBArray>) indexList;
+- (id <RethinkDBArray>) indexStatus:(id)names;
+- (id <RethinkDBArray>) indexWait:(id)names;
+
+- (id <RethinkDBTable>) table:(NSString*)name options:(NSDictionary*)options;
+- (id <RethinkDBTable>) table:(NSString*)name;
+
+@end
 
 @interface RethinkDbClient : NSObject
 
 + (RethinkDbClient*) clientWithURL:(NSURL*)url andError:(NSError**)error;
 
 - (BOOL) close:(NSError**)error;
-- (id) run:(NSError**)error;
 
-- (RethinkDbClient*) db: (NSString*)name;
-- (RethinkDbClient*) dbCreate:(NSString*)name;
-- (RethinkDbClient*) dbDrop:(NSString*)name;
-- (RethinkDbClient*) dbList;
+- (id <RethinkDBDatabase>) db: (NSString*)name;
+- (id <RethinkDBObject>) dbCreate:(NSString*)name;
+- (id <RethinkDBObject>) dbDrop:(NSString*)name;
+- (id <RethinkDBArray>) dbList;
 
-- (RethinkDbClient*) tableCreate:(NSString*)name options:(NSDictionary*)options;
-- (RethinkDbClient*) tableCreate:(NSString*)name;
-- (RethinkDbClient*) tableDrop:(NSString*)name;
-- (RethinkDbClient*) tableList;
 
-- (RethinkDbClient*) indexCreate:(NSString*)name;
-- (RethinkDbClient*) indexDrop:(NSString*)name;
-- (RethinkDbClient*) indexList;
-- (RethinkDbClient*) indexStatus:(id)names;
-- (RethinkDbClient*) indexWait:(id)names;
-- (RethinkDbClient*) table:(NSString*)name options:(NSDictionary*)options;
-- (RethinkDbClient*) table:(NSString*)name;
 
-- (RethinkDbClient*) insert:(id)object options:(NSDictionary*)options;
-- (RethinkDbClient*) insert:(id)object;
-- (RethinkDbClient*) update:(id)object options:(NSDictionary*)options;
-- (RethinkDbClient*) update:(id)object;
-- (RethinkDbClient*) replace:(id)object options:(NSDictionary*)options;
-- (RethinkDbClient*) replace:(id)object;
-- (RethinkDbClient*) delete:(NSDictionary*)options;
-- (RethinkDbClient*) delete;
-- (RethinkDbClient*) sync;
 
-- (RethinkDbClient*) get:(id)key;
-- (RethinkDbClient*) getAll:(NSArray*)keys options:(NSDictionary*)options;
-- (RethinkDbClient*) getAll:(NSArray *)keys;
-- (RethinkDbClient*) between:(id)lower and:(id)upper options:(NSDictionary*)options;
-- (RethinkDbClient*) between:(id)lower and:(id)upper;
-- (RethinkDbClient*) filter:(id)predicate options:(NSDictionary*)options;
-- (RethinkDbClient*) filter:(id)predicate;
-
-- (RethinkDbClient*) innerJoin:(id)sequence on:(RethinkDbJoinPredicate)predicate;
-- (RethinkDbClient*) outerJoin:(id)sequence on:(RethinkDbJoinPredicate)predicate;
-- (RethinkDbClient*) eqJoin:(NSString*)key to:(id)sequence options:(NSDictionary*)options;
-- (RethinkDbClient*) eqJoin:(NSString*)key to:(id)sequence;
-- (RethinkDbClient*) zip;
-
-- (RethinkDbClient*) map:(RethinkDbMappingFunction)function;
-- (RethinkDbClient*) withFields:(NSArray*)fields;
-- (RethinkDbClient*) concatMap:(RethinkDbMappingFunction)function;
-- (RethinkDbClient*) orderBy:(id)order;
-- (RethinkDbClient*) skip:(NSInteger)count;
-- (RethinkDbClient*) limit:(NSInteger)count;
-- (RethinkDbClient*) slice:(NSInteger)start to:(NSInteger)end;
-- (RethinkDbClient*) nth:(NSInteger)index;
-- (RethinkDbClient*) indexesOf:(id)datum;
-- (RethinkDbClient*) indexesOfPredicate:(RethinkDbMappingFunction)function;
-- (RethinkDbClient*) inEmpty;
-- (RethinkDbClient*) union:(RethinkDbClient*)sequence;
-- (RethinkDbClient*) sample:(NSInteger)count;
-
-- (RethinkDbClient*) reduce:(RethinkDbReductionFunction)function base:(id)base;
-- (RethinkDbClient*) reduce:(RethinkDbReductionFunction)function;
-- (RethinkDbClient*) count;
-- (RethinkDbClient*) distinct;
-- (RethinkDbClient*) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction withBase:(id)base;
-- (RethinkDbClient*) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction;
-- (RethinkDbClient*) groupBy:(id)columns reduce:(NSDictionary*)reductionObject;
-- (RethinkDbClient*) groupByAndCount:(id)columns;
-- (RethinkDbClient*) groupBy:(id)columns sum:(NSString*)attribute;
-- (RethinkDbClient*) groupBy:(id)columns average:(NSString*)attribute;
-- (RethinkDbClient*) contains:(id)values;
-
-- (RethinkDbClient*) row;
-- (RethinkDbClient*) row:(NSString*)key;
-- (RethinkDbClient*) pluck:(id)fields;
-- (RethinkDbClient*) without:(id)fields;
-- (RethinkDbClient*) merge:(id)object;
 - (RethinkDbClient*) append:(id)object;
 - (RethinkDbClient*) prepend:(id)object;
 - (RethinkDbClient*) difference:(NSArray*)array;
