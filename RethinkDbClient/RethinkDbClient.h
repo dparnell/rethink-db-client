@@ -12,6 +12,7 @@
 @protocol RethinkDBSequence;
 @protocol RethinkDBObject;
 @protocol RethinkDBArray;
+@protocol RethinkDBDateTime;
 
 typedef id <RethinkDBRunnable> (^RethinkDbJoinPredicate)(id <RethinkDBSequence> left, id <RethinkDBSequence> right);
 typedef id <RethinkDBRunnable> (^RethinkDbMappingFunction)(id <RethinkDBObject> row);
@@ -25,13 +26,74 @@ typedef id <RethinkDBRunnable> (^RethinkDbExpressionFunction)(NSArray* arguments
 - (id <RethinkDBObject>) row;
 - (id <RethinkDBObject>) row:(NSString*)key;
 
+- (id <RethinkDBObject>) do:(RethinkDbExpressionFunction)expression withArguments:(NSArray*)arguments;
+
 @end
 
 @protocol RethinkDBObject <RethinkDBRunnable>
 
-- (RethinkDbClient*) pluck:(id)fields;
-- (RethinkDbClient*) without:(id)fields;
-- (RethinkDbClient*) merge:(id)object;
+- (id <RethinkDBSequence>) pluck:(id)fields;
+- (id <RethinkDBSequence>) without:(id)fields;
+- (id <RethinkDBSequence>) merge:(id)object;
+
+- (id <RethinkDBArray>) match:(NSString*)regex;
+
+- (id <RethinkDBObject>) add:(id)expr;
+- (id <RethinkDBObject>) sub:(id)expr;
+- (id <RethinkDBObject>) mul:(id)expr;
+- (id <RethinkDBObject>) div:(id)expr;
+- (id <RethinkDBObject>) mod:(id)expr;
+- (id <RethinkDBObject>) eq:(id)expr;
+- (id <RethinkDBObject>) ne:(id)expr;
+- (id <RethinkDBObject>) gt:(id)expr;
+- (id <RethinkDBObject>) ge:(id)expr;
+- (id <RethinkDBObject>) lt:(id)expr;
+- (id <RethinkDBObject>) le:(id)expr;
+- (id <RethinkDBObject>) not;
+- (id <RethinkDBObject>) and:(id)expr;
+- (id <RethinkDBObject>) or:(id)expr;
+- (id <RethinkDBObject>) any:(NSArray*)expressions;
+- (id <RethinkDBObject>) all:(NSArray*)expressions;
+
+- (id <RethinkDBDateTime>) now;
+- (id <RethinkDBDateTime>) timeWithYear:(NSInteger)year month:(NSInteger)month day:(NSInteger)day timezone:(NSString*)time_zone;
+- (id <RethinkDBDateTime>) timeWithYear:(NSInteger)year month:(NSInteger)month day:(NSInteger)day hour:(NSInteger)hour minute:(NSInteger)minute seconds:(NSInteger)seconds timezone:(NSString*)time_zone;
+- (id <RethinkDBDateTime>) time:(NSDate*)date;
+- (id <RethinkDBDateTime>) epochTime:(id)seconds;
+- (id <RethinkDBDateTime>) ISO8601:(id)time;
+
+- (id <RethinkDBObject>) branch:(id <RethinkDBObject>) test then:(id <RethinkDBObject>) then otherwise:(id <RethinkDBObject>) otherwise;
+- (id <RethinkDBObject>) forEach:(RethinkDbMappingFunction)function;
+- (id <RethinkDBObject>) error:(id)message;
+- (id <RethinkDBObject>) error;
+- (id <RethinkDBObject>) default:(id)value;
+- (id <RethinkDBObject>) expr:(id)value;
+- (id <RethinkDBObject>) js:(NSString*)script;
+- (id <RethinkDBObject>) coerceTo:(NSString*)type;
+- (id <RethinkDBObject>) typeOf;
+- (id <RethinkDBObject>) info;
+- (id <RethinkDBObject>) json:(NSString*)json;
+
+@end
+
+@protocol RethinkDBDateTime <RethinkDBObject>
+
+- (id <RethinkDBObject>) inTimezone:(id)time_zone;
+- (id <RethinkDBObject>) timezone;
+- (id <RethinkDBObject>) during:(id)from to:(id)to options:(NSDictionary*)options;
+- (id <RethinkDBObject>) during:(id)from to:(id)to;
+- (id <RethinkDBDateTime>) date;
+- (id <RethinkDBDateTime>) timeOfDay;
+- (id <RethinkDBObject>) year;
+- (id <RethinkDBObject>) month;
+- (id <RethinkDBObject>) day;
+- (id <RethinkDBObject>) dayOfWeek;
+- (id <RethinkDBObject>) dayOfYear;
+- (id <RethinkDBObject>) hours;
+- (id <RethinkDBObject>) minutes;
+- (id <RethinkDBObject>) seconds;
+- (id <RethinkDBObject>) toISO8601;
+- (id <RethinkDBObject>) toEpochTime;
 
 @end
 
@@ -71,7 +133,21 @@ typedef id <RethinkDBRunnable> (^RethinkDbExpressionFunction)(NSArray* arguments
 - (id <RethinkDBArray>) groupBy:(id)columns average:(NSString*)attribute;
 - (id <RethinkDBObject>) contains:(id)values;
 
-
+- (id <RethinkDBSequence>) append:(id)object;
+- (id <RethinkDBSequence>) prepend:(id)object;
+- (id <RethinkDBSequence>) difference:id;
+- (id <RethinkDBSequence>) setInsert:(id)value;
+- (id <RethinkDBSequence>) setUnion:(id)array;
+- (id <RethinkDBSequence>) setIntersection:(id)array;
+- (id <RethinkDBSequence>) setDifference:(id)array;
+- (id <RethinkDBSequence>) field:(NSString*)key;
+- (id <RethinkDBSequence>) hasFields:(id)fields;
+- (id <RethinkDBSequence>) insert:(id)object at:(NSUInteger)index;
+- (id <RethinkDBSequence>) splice:(id)objects at:(NSUInteger)index;
+- (id <RethinkDBSequence>) deleteAt:(NSUInteger)index to:(NSUInteger)end_index;
+- (id <RethinkDBSequence>) deleteAt:(NSUInteger)index;
+- (id <RethinkDBSequence>) changeAt:(NSUInteger)index value:(id)value;
+- (id <RethinkDBArray>) keys;
 @end
 
 @protocol RethinkDBArray <RethinkDBSequence>
@@ -122,7 +198,7 @@ typedef id <RethinkDBRunnable> (^RethinkDbExpressionFunction)(NSArray* arguments
 
 @end
 
-@interface RethinkDbClient : NSObject
+@interface RethinkDbClient : NSObject <RethinkDBRunnable, RethinkDBObject, RethinkDBSequence, RethinkDBArray, RethinkDBStream, RethinkDBTable, RethinkDBDateTime, RethinkDBDatabase>
 
 + (RethinkDbClient*) clientWithURL:(NSURL*)url andError:(NSError**)error;
 
@@ -132,79 +208,5 @@ typedef id <RethinkDBRunnable> (^RethinkDbExpressionFunction)(NSArray* arguments
 - (id <RethinkDBObject>) dbCreate:(NSString*)name;
 - (id <RethinkDBObject>) dbDrop:(NSString*)name;
 - (id <RethinkDBArray>) dbList;
-
-
-
-
-- (RethinkDbClient*) append:(id)object;
-- (RethinkDbClient*) prepend:(id)object;
-- (RethinkDbClient*) difference:(NSArray*)array;
-- (RethinkDbClient*) setInsert:(id)value;
-- (RethinkDbClient*) setUnion:(NSArray*)array;
-- (RethinkDbClient*) setIntersection:(NSArray*)array;
-- (RethinkDbClient*) setDifference:(NSArray*)array;
-- (RethinkDbClient*) field:(NSString*)key;
-- (RethinkDbClient*) hasFields:(id)fields;
-- (RethinkDbClient*) insert:(id)object at:(NSUInteger)index;
-- (RethinkDbClient*) splice:(NSArray*)objects at:(NSUInteger)index;
-- (RethinkDbClient*) deleteAt:(NSUInteger)index to:(NSUInteger)end_index;
-- (RethinkDbClient*) deleteAt:(NSUInteger)index;
-- (RethinkDbClient*) changeAt:(NSUInteger)index value:(id)value;
-- (RethinkDbClient*) keys;
-
-- (RethinkDbClient*) match:(NSString*)regex;
-
-- (RethinkDbClient*) add:(id)expr;
-- (RethinkDbClient*) sub:(id)expr;
-- (RethinkDbClient*) mul:(id)expr;
-- (RethinkDbClient*) div:(id)expr;
-- (RethinkDbClient*) mod:(id)expr;
-- (RethinkDbClient*) eq:(id)expr;
-- (RethinkDbClient*) ne:(id)expr;
-- (RethinkDbClient*) gt:(id)expr;
-- (RethinkDbClient*) ge:(id)expr;
-- (RethinkDbClient*) lt:(id)expr;
-- (RethinkDbClient*) le:(id)expr;
-- (RethinkDbClient*) not;
-- (RethinkDbClient*) and:(id)expr;
-- (RethinkDbClient*) or:(id)expr;
-- (RethinkDbClient*) any:(NSArray*)expressions;
-- (RethinkDbClient*) all:(NSArray*)expressions;
-
-- (RethinkDbClient*) now;
-- (RethinkDbClient*) timeWithYear:(NSInteger)year month:(NSInteger)month day:(NSInteger)day timezone:(NSString*)time_zone;
-- (RethinkDbClient*) timeWithYear:(NSInteger)year month:(NSInteger)month day:(NSInteger)day hour:(NSInteger)hour minute:(NSInteger)minute seconds:(NSInteger)seconds timezone:(NSString*)time_zone;
-- (RethinkDbClient*) time:(NSDate*)date;
-- (RethinkDbClient*) epochTime:(id)seconds;
-- (RethinkDbClient*) ISO8601:(id)time;
-- (RethinkDbClient*) inTimezone:(id)time_zone;
-- (RethinkDbClient*) timezone;
-- (RethinkDbClient*) during:(id)from to:(id)to options:(NSDictionary*)options;
-- (RethinkDbClient*) during:(id)from to:(id)to;
-- (RethinkDbClient*) date;
-- (RethinkDbClient*) timeOfDay;
-- (RethinkDbClient*) year;
-- (RethinkDbClient*) month;
-- (RethinkDbClient*) day;
-- (RethinkDbClient*) dayOfWeek;
-- (RethinkDbClient*) dayOfYear;
-- (RethinkDbClient*) hours;
-- (RethinkDbClient*) minutes;
-- (RethinkDbClient*) seconds;
-- (RethinkDbClient*) toISO8601;
-- (RethinkDbClient*) toEpochTime;
-
-- (RethinkDbClient*) do:(RethinkDbExpressionFunction)expression withArguments:(NSArray*)arguments;
-- (RethinkDbClient*) branch:(RethinkDbClient*) test then:(RethinkDbClient*) then otherwise:(RethinkDbClient*) otherwise;
-- (RethinkDbClient*) forEach:(RethinkDbMappingFunction)function;
-- (RethinkDbClient*) error:(id)message;
-- (RethinkDbClient*) error;
-- (RethinkDbClient*) default:(id)value;
-- (RethinkDbClient*) expr:(id)value;
-- (RethinkDbClient*) js:(NSString*)script;
-- (RethinkDbClient*) coerceTo:(NSString*)type;
-- (RethinkDbClient*) typeOf;
-- (RethinkDbClient*) info;
-- (RethinkDbClient*) json:(NSString*)json;
 
 @end

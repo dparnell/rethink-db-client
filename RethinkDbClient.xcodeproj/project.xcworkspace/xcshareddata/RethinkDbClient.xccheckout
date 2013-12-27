@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>25D436F9-F9E4-4D59-9FB0-AD289BA6A0EB</string>
+	<key>IDESourceControlProjectName</key>
+	<string>RethinkDbClient</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>68158A24-8883-4523-9778-14DDBB41600A</key>
+		<string>ssh://github.com/dparnell/rethink-db-client.git</string>
+		<key>CDBA34CD-91A3-4153-A778-0A7361F90DB3</key>
+		<string>ssh://github.com/dparnell/protobuf-objc.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>RethinkDbClient.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>68158A24-8883-4523-9778-14DDBB41600A</key>
+		<string>../..</string>
+		<key>CDBA34CD-91A3-4153-A778-0A7361F90DB3</key>
+		<string>../../RethinkDbClient/Protocol/protobuf-objc</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://github.com/dparnell/rethink-db-client.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>68158A24-8883-4523-9778-14DDBB41600A</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>CDBA34CD-91A3-4153-A778-0A7361F90DB3</string>
+			<key>IDESourceControlWCCName</key>
+			<string>protobuf-objc</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>68158A24-8883-4523-9778-14DDBB41600A</string>
+			<key>IDESourceControlWCCName</key>
+			<string>RethinkDbClient</string>
+		</dict>
+	</array>
+</dict>
+</plist>
