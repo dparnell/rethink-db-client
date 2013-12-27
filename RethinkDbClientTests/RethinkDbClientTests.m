@@ -87,7 +87,7 @@
     id response = [[r tableCreate: @"filterTest"] run: &error];
     XCTAssertNotNil(response, @"createTable failed: %@", error);
 
-    RethinkDbClient* table = [r table: @"filterTest"];
+    id <RethinkDBTable> table = [r table: @"filterTest"];
     
     for(int i=0; i<10; i++) {
         response = [[table insert: [NSDictionary dictionaryWithObject: [NSNumber numberWithInt: i] forKey: @"number"]] run: &error];
@@ -96,7 +96,7 @@
         XCTAssertNotNil([response objectForKey: @"generated_keys"], @"generated keys not found: %@", response);
     }
     
-    RethinkDbClient* query = [table filter: [[r row: @"number"] gt: [NSNumber numberWithInt: 5]]];
+    id <RethinkDBSequence> query = [table filter: [[r row: @"number"] gt: [NSNumber numberWithInt: 5]]];
     
     NSArray* rows = [query run: &error];
     XCTAssertNotNil(rows, @"filter failed: %@", error);
@@ -122,7 +122,7 @@
     NSError* error = nil;
     XCTAssertNotNil(r, @"Connection failed");
     
-    RethinkDbClient* db = [r db: @"test"];
+    id <RethinkDBDatabase> db = [r db: @"test"];
     NSArray* db_list = [[db tableList] run: &error];
     XCTAssertNotNil(db_list, @"dbList failed failed: %@", error);
     
@@ -130,7 +130,7 @@
         XCTFail(@"both the 'input_polls' and 'county_status' tables must be present");
     }
     
-    RethinkDbClient* query = [[[db table: @"input_polls"] innerJoin: [db table: @"county_stats"] on:^RethinkDbClient *(RethinkDbClient *left, RethinkDbClient *right) {
+    id <RethinkDBObject> query = [[[db table: @"input_polls"] innerJoin: [db table: @"county_stats"] on:^id <RethinkDBObject>(RethinkDbClient *left, RethinkDbClient *right) {
         return [[left field: @"id"] eq: [right field: @"Stname"]];
     }] count];
     
@@ -143,11 +143,11 @@
 - (void) testControlStructures {
     NSError* error = nil;
     XCTAssertNotNil(r, @"Connection failed");
-    RethinkDbClient* db = [r db: @"test"];
+    id <RethinkDBDatabase> db = [r db: @"test"];
     
-    RethinkDbClient* query = [db do:^RethinkDbClient *(NSArray *arguments) {
-        RethinkDbClient* arg1 = [arguments objectAtIndex: 0];
-        RethinkDbClient* arg2 = [arguments objectAtIndex: 1];
+    id <RethinkDBRunnable> query = [db do:^id <RethinkDBObject>(NSArray *arguments) {
+        id <RethinkDBObject> arg1 = [arguments objectAtIndex: 0];
+        id <RethinkDBObject> arg2 = [arguments objectAtIndex: 1];
         
         return [arg1 add: arg2];
     } withArguments: [NSArray arrayWithObjects: [NSNumber numberWithInt: 3], [NSNumber numberWithInt: 4], nil]];
