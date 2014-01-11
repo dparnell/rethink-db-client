@@ -118,10 +118,22 @@ static NSString* rethink_error = @"RethinkDB Error";
                     [pb_output_stream writeRawLittleEndian32: VersionDummy_VersionV02];
                     [pb_output_stream flush];
 
+                    stream_error = [output_stream streamError];
+                    if(stream_error) {
+                        ERROR(stream_error);
+                        return nil;
+                    }
+                    
                     // now send the auth key
                     [pb_output_stream writeRawLittleEndian32: (int32_t)[auth_key_data length]];
                     [pb_output_stream writeRawData: auth_key_data];
                     [pb_output_stream flush];
+                    
+                    stream_error = [output_stream streamError];
+                    if(stream_error) {
+                        ERROR(stream_error);
+                        return nil;
+                    }
                     
                     while((byte = [pb_input_stream readRawByte])) {
                         [auth_response appendBytes: &byte length: 1];
@@ -441,22 +453,29 @@ static NSString* rethink_error = @"RethinkDB Error";
         }
         toExecute.type = Query_QueryTypeStart;
         toExecute.query = toRun;
+
         
-        Response* response = [self transmit: toExecute];
-        
-        if(response.type == Response_ResponseTypeClientError || response.type == Response_ResponseTypeCompileError || response.type == Response_ResponseTypeRuntimeError) {
-            if(error) {
-                // TODO: give more details when something goes wrong
-                Datum* errorDatum = [[response response] objectAtIndex: 0];
-                *error = [NSError errorWithDomain: rethink_error code: response.type userInfo: [NSDictionary dictionaryWithObjectsAndKeys:
-                                                                                                errorDatum.rStr, NSLocalizedDescriptionKey,
-                                                                                                [self decodeErrorResponse: response], @"RethinkDB Response",
-                                                                                                nil]];
+        @try {
+            Response* response = [self transmit: toExecute];
+            if(response.type == Response_ResponseTypeClientError || response.type == Response_ResponseTypeCompileError || response.type == Response_ResponseTypeRuntimeError) {
+                if(error) {
+                    // TODO: give more details when something goes wrong
+                    Datum* errorDatum = [[response response] objectAtIndex: 0];
+                    *error = [NSError errorWithDomain: rethink_error code: response.type userInfo: [NSDictionary dictionaryWithObjectsAndKeys:
+                                                                                                    errorDatum.rStr, NSLocalizedDescriptionKey,
+                                                                                                    [self decodeErrorResponse: response], @"RethinkDB Response",
+                                                                                                    nil]];
+                }
+                return nil;
             }
+            
+            return [self decodeResponse: response];
+            
+        }
+        @catch (NSException *exception) {
+            RETHINK_ERROR(-3, [exception reason]);
             return nil;
         }
-        
-        return [self decodeResponse: response];
     }
     
     RETHINK_ERROR(-2, @"Connection is not open");

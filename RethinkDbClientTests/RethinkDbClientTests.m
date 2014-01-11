@@ -60,6 +60,17 @@
     [super tearDown];
 }
 
+- (void) testFailedConnection
+{
+    // TODO: find a way to choose a port that we know is not being listened on right now
+    NSURL* url = [NSURL URLWithString: @"rethink://localhost:28014"];
+    NSError* error = nil;
+    r = [RethinkDbClient clientWithURL: url andError: &error];
+    
+    XCTAssertNil(r, @"The connection attempt should have failed");
+    XCTAssertNotNil(error, @"The error object should have been filled in!");
+}
+
 - (void)testLocalConnection
 {
     XCTAssertNotNil(r, @"Connection failed");
