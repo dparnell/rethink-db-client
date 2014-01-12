@@ -29,6 +29,8 @@
 
 #import <Foundation/Foundation.h>
 
+extern NSString* kRethinkDbOrderedKeys;
+
 @protocol RethinkDBRunnable;
 @protocol RethinkDBSequence;
 @protocol RethinkDBObject;
@@ -229,5 +231,7 @@ typedef id <RethinkDBRunnable> (^RethinkDbExpressionFunction)(NSArray* arguments
 - (id <RethinkDBObject>) dbCreate:(NSString*)name;
 - (id <RethinkDBObject>) dbDrop:(NSString*)name;
 - (id <RethinkDBArray>) dbList;
+
+- (id <RethinkDBRunnable>) queryWithDictionary:(NSDictionary*)query;
 
 @end

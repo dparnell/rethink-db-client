@@ -31,6 +31,8 @@
 #import <ProtocolBuffers/ProtocolBuffers.h>
 #import "Ql2.pb.h"
 
+NSString* kRethinkDbOrderedKeys = @"__RethinkDb__Ordered__Keys__";
+
 static NSString* rethink_error = @"RethinkDB Error";
 
 #define ERROR(x) if(error) *error = x
@@ -192,6 +194,55 @@ static NSString* rethink_error = @"RethinkDB Error";
 }
 
 #pragma mark -
+#pragma mark Misc stuff
+
+- (Datum*) datumWithDictionary:(NSDictionary*)dict {
+    Datum_Builder* datum = [Datum_Builder new];
+    NSString* type = [dict objectForKey: @"type"];
+    if([type isEqualToString: @"R_STR"]) {
+        datum.type = Datum_DatumTypeRStr;
+        datum.rStr = [dict objectForKey: @"r_str"];
+    } else {
+        @throw [NSException exceptionWithName: rethink_error reason: @"Unknown datum type" userInfo: dict];
+    }
+    return [datum build];
+}
+
+- (Term*) termWithDictionary:(NSDictionary*)dict {
+    Term_Builder* tb = [Term_Builder new];
+    NSString* type = [dict objectForKey: @"type"];
+    if([type isEqualToString: @"TABLE"]) {
+        tb.type = Term_TermTypeTable;
+    } else if([type isEqualToString: @"DATUM"]) {
+        tb.type = Term_TermTypeDatum;
+        tb.datum = [self datumWithDictionary: [dict objectForKey: @"datum"]];
+    } else {
+        @throw [NSException exceptionWithName: rethink_error reason: @"Unknown term type" userInfo: dict];
+    }
+    
+    NSArray* args = [dict objectForKey: @"args"];
+    if(args) {
+        for (NSDictionary* arg in args) {
+            [tb addArgs: [self termWithDictionary: arg]];
+        }
+    }
+    NSDictionary* optargs = [dict objectForKey: @"optargs"];
+    if(optargs) {
+        for (NSString* key in optargs.allKeys) {
+            Term_AssocPair_Builder* pair = [Term_AssocPair_Builder new];
+            pair.key = key;
+            pair.val = [self termWithDictionary: [optargs objectForKey: key]];
+        }
+    }
+    
+    return [tb build];
+}
+
+- (id <RethinkDBRunnable>) queryWithDictionary:(NSDictionary*)query {
+    return [self clientWithTerm: [self termWithDictionary: query]];
+}
+
+#pragma mark -
 #pragma mark Utility stuff
 
 - (id) decodeDatum:(Datum*)datum {
@@ -227,11 +278,16 @@ static NSString* rethink_error = @"RethinkDB Error";
 }
 
 - (id) decodeObject:(NSArray*)object {
-    NSMutableDictionary* result = [NSMutableDictionary dictionaryWithCapacity: [object count]];
-
+    NSInteger count = [object count];
+    NSMutableDictionary* result = [NSMutableDictionary dictionaryWithCapacity: count + 1];
+    NSMutableArray* ordered_keys = [NSMutableArray arrayWithCapacity: count];
+    
     [object enumerateObjectsUsingBlock:^(Datum_AssocPair* pair, NSUInteger idx, BOOL *stop) {
         [result setObject: [self decodeDatum: pair.val] forKey: pair.key];
+        [ordered_keys addObject: pair.key];
     }];
+    
+    [result setObject: ordered_keys forKey: kRethinkDbOrderedKeys];
     
     return result;
     
