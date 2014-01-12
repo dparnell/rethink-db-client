@@ -202,22 +202,172 @@ static NSString* rethink_error = @"RethinkDB Error";
     if([type isEqualToString: @"R_STR"]) {
         datum.type = Datum_DatumTypeRStr;
         datum.rStr = [dict objectForKey: @"r_str"];
+    } else if([type isEqualToString: @"R_NUM"]) {
+        datum.type = Datum_DatumTypeRNum;
+        datum.rNum = [[dict objectForKey: @"r_num"] doubleValue];
+    } else if([type isEqualToString: @"R_BOOL"]) {
+        datum.type = Datum_DatumTypeRBool;
+        datum.rBool = [[dict objectForKey: @"r_bool"] boolValue];
+    } else if([type isEqualToString: @"R_NULL"]) {
+        datum.type = Datum_DatumTypeRNull;
     } else {
         @throw [NSException exceptionWithName: rethink_error reason: @"Unknown datum type" userInfo: dict];
     }
     return [datum build];
 }
 
+static NSDictionary* term_name_to_type = nil;
+
 - (Term*) termWithDictionary:(NSDictionary*)dict {
+    if(term_name_to_type == nil) {
+        term_name_to_type = [NSDictionary dictionaryWithObjectsAndKeys:
+                             [NSNumber numberWithInt: Term_TermTypeDatum], @"DATUM",
+                             [NSNumber numberWithInt: Term_TermTypeMakeArray], @"MAKE_ARRAY",
+                             [NSNumber numberWithInt: Term_TermTypeMakeObj], @"MAKE_OBJ",
+                             [NSNumber numberWithInt: Term_TermTypeVar], @"VAR",
+                             [NSNumber numberWithInt: Term_TermTypeJavascript], @"JAVASCRIPT",
+                             [NSNumber numberWithInt: Term_TermTypeJson], @"JSON",
+                             [NSNumber numberWithInt: Term_TermTypeError], @"ERROR",
+                             [NSNumber numberWithInt: Term_TermTypeImplicitVar], @"IMPLICIT_VAR",
+                             [NSNumber numberWithInt: Term_TermTypeDb], @"DB",
+                             [NSNumber numberWithInt: Term_TermTypeTable], @"TABLE",
+                             [NSNumber numberWithInt: Term_TermTypeGet], @"GET",
+                             [NSNumber numberWithInt: Term_TermTypeGetAll], @"GET_ALL",
+                             [NSNumber numberWithInt: Term_TermTypeEq], @"EQ",
+                             [NSNumber numberWithInt: Term_TermTypeNe], @"NE",
+                             [NSNumber numberWithInt: Term_TermTypeLt], @"LT",
+                             [NSNumber numberWithInt: Term_TermTypeLe], @"LE",
+                             [NSNumber numberWithInt: Term_TermTypeGt], @"GT",
+                             [NSNumber numberWithInt: Term_TermTypeGe], @"GE",
+                             [NSNumber numberWithInt: Term_TermTypeNot], @"NOT",
+                             [NSNumber numberWithInt: Term_TermTypeAdd], @"ADD",
+                             [NSNumber numberWithInt: Term_TermTypeSub], @"SUB",
+                             [NSNumber numberWithInt: Term_TermTypeMul], @"MUL",
+                             [NSNumber numberWithInt: Term_TermTypeDiv], @"DIV",
+                             [NSNumber numberWithInt: Term_TermTypeMod], @"MOD",
+                             [NSNumber numberWithInt: Term_TermTypeAppend], @"APPEND",
+                             [NSNumber numberWithInt: Term_TermTypePrepend], @"PREPEND",
+                             [NSNumber numberWithInt: Term_TermTypeDifference], @"DIFFERENCE",
+                             [NSNumber numberWithInt: Term_TermTypeSetInsert], @"SET_INSERT",
+                             [NSNumber numberWithInt: Term_TermTypeSetUnion], @"SET_UNION",
+                             [NSNumber numberWithInt: Term_TermTypeSetIntersection], @"SET_INTERSECTION",
+                             [NSNumber numberWithInt: Term_TermTypeSetDifference], @"SET_DIFFERENCE",
+                             [NSNumber numberWithInt: Term_TermTypeSlice], @"SLICE",
+                             [NSNumber numberWithInt: Term_TermTypeSkip], @"SKIP",
+                             [NSNumber numberWithInt: Term_TermTypeLimit], @"LIMIT",
+                             [NSNumber numberWithInt: Term_TermTypeGetField], @"GET_FIELD",
+                             [NSNumber numberWithInt: Term_TermTypeContains], @"CONTAINS",
+                             [NSNumber numberWithInt: Term_TermTypeInsertAt], @"INSERT_AT",
+                             [NSNumber numberWithInt: Term_TermTypeSpliceAt], @"SPLICE_AT",
+                             [NSNumber numberWithInt: Term_TermTypeDeleteAt], @"DELETE_AT",
+                             [NSNumber numberWithInt: Term_TermTypeChangeAt], @"CHANGE_AT",
+                             [NSNumber numberWithInt: Term_TermTypeContains], @"CONTAINS",
+                             [NSNumber numberWithInt: Term_TermTypeHasFields], @"HAS_FIELDS",
+                             [NSNumber numberWithInt: Term_TermTypeWithFields], @"WITH_FIELDS",
+                             [NSNumber numberWithInt: Term_TermTypeKeys], @"KEYS",
+                             [NSNumber numberWithInt: Term_TermTypePluck], @"PLUCK",
+                             [NSNumber numberWithInt: Term_TermTypeIndexesOf], @"INDEXES_OF",
+                             [NSNumber numberWithInt: Term_TermTypeWithout], @"WITHOUT",
+                             [NSNumber numberWithInt: Term_TermTypeMerge], @"MERGE",
+                             [NSNumber numberWithInt: Term_TermTypeBetween], @"BETWEEN",
+                             [NSNumber numberWithInt: Term_TermTypeReduce], @"REDUCE",
+                             [NSNumber numberWithInt: Term_TermTypeMap], @"MAP",
+                             [NSNumber numberWithInt: Term_TermTypeFilter], @"FILTER",
+                             [NSNumber numberWithInt: Term_TermTypeConcatmap], @"CONCATMAP",
+                             [NSNumber numberWithInt: Term_TermTypeOrderby], @"ORDERBY",
+                             [NSNumber numberWithInt: Term_TermTypeDistinct], @"DISTINCT",
+                             [NSNumber numberWithInt: Term_TermTypeCount], @"COUNT",
+                             [NSNumber numberWithInt: Term_TermTypeUnion], @"UNION",
+                             [NSNumber numberWithInt: Term_TermTypeNth], @"NTH",
+                             [NSNumber numberWithInt: Term_TermTypeMatch], @"MATCH",
+                             [NSNumber numberWithInt: Term_TermTypeIsEmpty], @"IS_EMPTY",
+                             [NSNumber numberWithInt: Term_TermTypeGroupedMapReduce], @"GROUPED_MAP_REDUCE",
+                             [NSNumber numberWithInt: Term_TermTypeGroupby], @"GROUPBY",
+                             [NSNumber numberWithInt: Term_TermTypeInnerJoin], @"INNER_JOIN",
+                             [NSNumber numberWithInt: Term_TermTypeOuterJoin], @"OUTER_JOIN",
+                             [NSNumber numberWithInt: Term_TermTypeEqJoin], @"EQ_JOIN",
+                             [NSNumber numberWithInt: Term_TermTypeZip], @"ZIP",
+                             [NSNumber numberWithInt: Term_TermTypeCoerceTo], @"COERCE_TO",
+                             [NSNumber numberWithInt: Term_TermTypeTypeof], @"TYPEOF",
+                             [NSNumber numberWithInt: Term_TermTypeInfo], @"INFO",
+                             [NSNumber numberWithInt: Term_TermTypeSample], @"SAMPLE",
+                             [NSNumber numberWithInt: Term_TermTypeUpdate], @"UPDATE",
+                             [NSNumber numberWithInt: Term_TermTypeDelete], @"DELETE",
+                             [NSNumber numberWithInt: Term_TermTypeReplace], @"REPLACE",
+                             [NSNumber numberWithInt: Term_TermTypeInsert], @"INSERT",
+                             [NSNumber numberWithInt: Term_TermTypeDbCreate], @"DB_CREATE",
+                             [NSNumber numberWithInt: Term_TermTypeDbDrop], @"DB_DROP",
+                             [NSNumber numberWithInt: Term_TermTypeDbList], @"DB_LIST",
+                             [NSNumber numberWithInt: Term_TermTypeTableCreate], @"TABLE_CREATE",
+                             [NSNumber numberWithInt: Term_TermTypeTableDrop], @"TABLE_DROP",
+                             [NSNumber numberWithInt: Term_TermTypeTableList], @"TABLE_LIST",
+                             [NSNumber numberWithInt: Term_TermTypeIndexCreate], @"INDEX_CREATE",
+                             [NSNumber numberWithInt: Term_TermTypeIndexDrop], @"INDEX_DROP",
+                             [NSNumber numberWithInt: Term_TermTypeIndexList], @"INDEX_LIST",
+                             [NSNumber numberWithInt: Term_TermTypeIndexStatus], @"INDEX_STATUS",
+                             [NSNumber numberWithInt: Term_TermTypeIndexWait], @"INDEX_WAIT",
+                             [NSNumber numberWithInt: Term_TermTypeSync], @"SYNC",
+                             [NSNumber numberWithInt: Term_TermTypeFuncall], @"FUNCALL",
+                             [NSNumber numberWithInt: Term_TermTypeDefault], @"DEFAULT",
+                             [NSNumber numberWithInt: Term_TermTypeBranch], @"BRANCH",
+                             [NSNumber numberWithInt: Term_TermTypeAny], @"ANY",
+                             [NSNumber numberWithInt: Term_TermTypeAll], @"ALL",
+                             [NSNumber numberWithInt: Term_TermTypeForeach], @"FOREACH",
+                             [NSNumber numberWithInt: Term_TermTypeFunc], @"FUNC",
+                             [NSNumber numberWithInt: Term_TermTypeAsc], @"ASC",
+                             [NSNumber numberWithInt: Term_TermTypeDesc], @"DESC",
+                             [NSNumber numberWithInt: Term_TermTypeLiteral], @"LITERAL",
+                             [NSNumber numberWithInt: Term_TermTypeIso8601], @"ISO8601",
+                             [NSNumber numberWithInt: Term_TermTypeToIso8601], @"TO_ISO8601",
+                             [NSNumber numberWithInt: Term_TermTypeEpochTime], @"EPOCH_TIME",
+                             [NSNumber numberWithInt: Term_TermTypeToEpochTime], @"TO_EPOCH_TIME",
+                             [NSNumber numberWithInt: Term_TermTypeNow], @"NOW",
+                             [NSNumber numberWithInt: Term_TermTypeInTimezone], @"IN_TIMEZONE",
+                             [NSNumber numberWithInt: Term_TermTypeDuring], @"DURING",
+                             [NSNumber numberWithInt: Term_TermTypeDate], @"DATE",
+                             [NSNumber numberWithInt: Term_TermTypeTimeOfDay], @"TIME_OF_DAY",
+                             [NSNumber numberWithInt: Term_TermTypeTimezone], @"TIMEZONE",
+                             [NSNumber numberWithInt: Term_TermTypeYear], @"YEAR",
+                             [NSNumber numberWithInt: Term_TermTypeMonth], @"MONTH",
+                             [NSNumber numberWithInt: Term_TermTypeDay], @"DAY",
+                             [NSNumber numberWithInt: Term_TermTypeDayOfWeek], @"DAY_OF_WEEK",
+                             [NSNumber numberWithInt: Term_TermTypeDayOfYear], @"DAY_OF_YEAR",
+                             [NSNumber numberWithInt: Term_TermTypeHours], @"HOURS",
+                             [NSNumber numberWithInt: Term_TermTypeMinutes], @"MINUTES",
+                             [NSNumber numberWithInt: Term_TermTypeSeconds], @"SECONDS",
+                             [NSNumber numberWithInt: Term_TermTypeTime], @"TIME",
+                             [NSNumber numberWithInt: Term_TermTypeMonday], @"MONDAY",
+                             [NSNumber numberWithInt: Term_TermTypeTuesday], @"TUESDAY",
+                             [NSNumber numberWithInt: Term_TermTypeWednesday], @"WEDNESDAY",
+                             [NSNumber numberWithInt: Term_TermTypeThursday], @"THURSDAY",
+                             [NSNumber numberWithInt: Term_TermTypeFriday], @"FRIDAY",
+                             [NSNumber numberWithInt: Term_TermTypeSaturday], @"SATURDAY",
+                             [NSNumber numberWithInt: Term_TermTypeSunday], @"SUNDAY",
+                             [NSNumber numberWithInt: Term_TermTypeJanuary], @"JANUARY",
+                             [NSNumber numberWithInt: Term_TermTypeFebruary], @"FEBRUARY",
+                             [NSNumber numberWithInt: Term_TermTypeMarch], @"MARCH",
+                             [NSNumber numberWithInt: Term_TermTypeApril], @"APRIL",
+                             [NSNumber numberWithInt: Term_TermTypeMay], @"MAY",
+                             [NSNumber numberWithInt: Term_TermTypeJune], @"JUNE",
+                             [NSNumber numberWithInt: Term_TermTypeJuly], @"JULY",
+                             [NSNumber numberWithInt: Term_TermTypeAugust], @"AUGUST",
+                             [NSNumber numberWithInt: Term_TermTypeSeptember], @"SEPTEMBER",
+                             [NSNumber numberWithInt: Term_TermTypeOctober], @"OCTOBER",
+                             [NSNumber numberWithInt: Term_TermTypeNovember], @"NOVEMBER",
+                             [NSNumber numberWithInt: Term_TermTypeDecember], @"DECEMBER",
+                             [NSNumber numberWithInt: Term_TermTypeLiteral], @"LITERAL",
+         nil];
+    }
+    
     Term_Builder* tb = [Term_Builder new];
     NSString* type = [dict objectForKey: @"type"];
-    if([type isEqualToString: @"TABLE"]) {
-        tb.type = Term_TermTypeTable;
-    } else if([type isEqualToString: @"DATUM"]) {
-        tb.type = Term_TermTypeDatum;
-        tb.datum = [self datumWithDictionary: [dict objectForKey: @"datum"]];
-    } else {
+    Term_TermType term_type = (Term_TermType)[[term_name_to_type objectForKey: type] intValue];
+    tb.type = term_type;
+    
+    if(term_type == 0) {
         @throw [NSException exceptionWithName: rethink_error reason: @"Unknown term type" userInfo: dict];
+    } else if(term_type == Term_TermTypeDatum) {
+        tb.datum = [self datumWithDictionary: [dict objectForKey: @"datum"]];
     }
     
     NSArray* args = [dict objectForKey: @"args"];
