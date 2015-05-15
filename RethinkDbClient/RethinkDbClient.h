@@ -42,6 +42,15 @@ typedef id <RethinkDBRunnable> (^RethinkDbMappingFunction)(id <RethinkDBObject> 
 typedef id <RethinkDBRunnable> (^RethinkDbReductionFunction)(id <RethinkDBObject> accumulator, id <RethinkDBObject> value);
 typedef id <RethinkDBRunnable> (^RethinkDbGroupByFunction)(id <RethinkDBObject> row);
 typedef id <RethinkDBRunnable> (^RethinkDbExpressionFunction)(NSArray* arguments);
+typedef void (^RethinkDbSuccessBlock)(id response);
+typedef void (^RethinkDbErrorBlock)(NSError *error);
+
+@interface RethinkDBOperation : NSOperation
+
+@property (readonly) int64_t token;
+
+@end
+
 
 @protocol RethinkDBRunnable <NSObject>
 
@@ -50,6 +59,8 @@ typedef id <RethinkDBRunnable> (^RethinkDbExpressionFunction)(NSArray* arguments
 - (id <RethinkDBObject>) row:(NSString*)key;
 
 - (id <RethinkDBObject>) do:(RethinkDbExpressionFunction)expression withArguments:(NSArray*)arguments;
+
+- (RethinkDBOperation*) runThen:(RethinkDbSuccessBlock)success fail:(RethinkDbErrorBlock)error;
 
 @end
 

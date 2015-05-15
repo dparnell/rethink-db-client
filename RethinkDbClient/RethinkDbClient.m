@@ -39,7 +39,54 @@ static NSString* rethink_error = @"RethinkDB Error";
 #define RETHINK_ERROR(x,y) if(error) *error = [NSError errorWithDomain: rethink_error code: x userInfo: [NSDictionary dictionaryWithObject: y forKey: NSLocalizedDescriptionKey]]
 #define CHECK_NULL(x) (x == nil ? [NSNull null] : x)
 
-@interface RethinkDbClient  (Private)
+@interface RethinkDBOperation (Private)
+
+@property (strong) Response *response;
+
+@end
+
+@implementation RethinkDBOperation {
+    __strong Response *_response;
+}
+
+- (id) initWithToken:(int64_t)aToken {
+    self = [super init];
+    
+    if(self) {
+        _token = aToken;
+    }
+    
+    return self;
+}
+
+- (BOOL) isAsynchronous {
+    return YES;
+}
+
+- (BOOL) isFinished {
+    return self.response != nil;
+}
+
+- (BOOL) isExecuting {
+    return self.response == nil;
+}
+
+- (Response*) response {
+    return _response;
+}
+
+- (void) setResponse:(Response *)aResponse {
+    [self willChangeValueForKey: @"response"];
+    [self willChangeValueForKey: @"isExecuting"];
+    [self willChangeValueForKey: @"isFinished"];
+    _response = aResponse;
+    [self didChangeValueForKey: @"response"];
+    [self didChangeValueForKey: @"isExecuting"];
+    [self didChangeValueForKey: @"isFinished"];
+}
+@end
+
+@interface RethinkDbClient  (Private) <NSStreamDelegate>
 
 - (id) initWithConnection:(RethinkDbClient*)parent;
 
@@ -49,17 +96,21 @@ static NSString* rethink_error = @"RethinkDB Error";
 
 @implementation RethinkDbClient {
     int64_t token;
-    NSLock* lock;
     NSInteger variable_number;
     
-    __strong RethinkDbClient* connection;
-    __strong NSInputStream* input_stream;
-    __strong NSOutputStream* output_stream;
-    __strong PBCodedOutputStream* pb_output_stream;
-    __strong PBCodedInputStream* pb_input_stream;
+    __strong NSLock *token_lock;
+    __strong NSLock *socket_lock;
+    __strong NSOperationQueue *queue;
+    __strong RethinkDbClient *connection;
+    __strong NSInputStream *input_stream;
+    __strong NSOutputStream *output_stream;
+    __strong PBCodedOutputStream *pb_output_stream;
+    __strong PBCodedInputStream *pb_input_stream;
     
-    __strong Query* _query;
-    __strong Term* _term;
+    NSUInteger expected_size;
+    __strong NSMutableData *_partial_data;
+    __strong Query *_query;
+    __strong Term *_term;
 }
 
 #pragma mark -
@@ -117,7 +168,7 @@ static NSString* rethink_error = @"RethinkDB Error";
                     }
                     
                     // send the protocol version down the socket
-                    [pb_output_stream writeRawLittleEndian32: VersionDummy_VersionV02];
+                    [pb_output_stream writeRawLittleEndian32: VersionDummy_VersionV04];
                     [pb_output_stream flush];
 
                     stream_error = [output_stream streamError];
@@ -130,7 +181,11 @@ static NSString* rethink_error = @"RethinkDB Error";
                     [pb_output_stream writeRawLittleEndian32: (int32_t)[auth_key_data length]];
                     [pb_output_stream writeRawData: auth_key_data];
                     [pb_output_stream flush];
-                    
+
+                    // send the communication protocol
+                    [pb_output_stream writeRawLittleEndian32: VersionDummy_ProtocolProtobuf];
+                    [pb_output_stream flush];
+
                     stream_error = [output_stream streamError];
                     if(stream_error) {
                         ERROR(stream_error);
@@ -147,6 +202,7 @@ static NSString* rethink_error = @"RethinkDB Error";
                         RETHINK_ERROR(NSURLErrorCannotConnectToHost, auth_response_string);
                         return nil;
                     }
+                    
                 } else {
                     RETHINK_ERROR(NSURLErrorCannotConnectToHost, @"Connection failed");
                     return nil;
@@ -161,7 +217,14 @@ static NSString* rethink_error = @"RethinkDB Error";
             return nil;
         }
         
-        lock = [NSLock new];
+        token = 1;
+        token_lock = [NSLock new];
+        socket_lock = [NSLock new];
+        queue = [NSOperationQueue new];
+        queue.name = [NSString stringWithFormat: @"RethinDB connection queue: %p", self];
+        
+        [input_stream setDelegate: self];
+        [input_stream scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSDefaultRunLoopMode];
     }
     
     return self;
@@ -182,6 +245,7 @@ static NSString* rethink_error = @"RethinkDB Error";
     [output_stream close];
 }
 
+
 #pragma mark -
 #pragma mark Properties
 
@@ -191,6 +255,69 @@ static NSString* rethink_error = @"RethinkDB Error";
 
 - (Term*) term {
     return _term;
+}
+
+#pragma mark -
+#pragma mark Input stream delegate function
+
+
+- (void)stream:(NSStream *)theStream handleEvent:(NSStreamEvent)streamEvent {
+    switch (streamEvent) {
+        case NSStreamEventEndEncountered:
+            [theStream close];
+            [theStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+            break;
+
+        case NSStreamEventHasBytesAvailable: {
+            if(_partial_data == nil) {
+                expected_size = [pb_input_stream readRawLittleEndian32];
+                _partial_data = [NSMutableData dataWithCapacity: expected_size];
+            }
+            
+            NSData *block = [pb_input_stream readRawData: (int32_t)(expected_size - _partial_data.length)];
+
+            [_partial_data appendData: block];
+            
+            if(block.length == expected_size) {
+                Response *response = [Response parseFromData: _partial_data];
+                _partial_data = nil;
+                
+                if(response.hasToken) {
+                    NSArray *ops = [queue operations];
+                    RethinkDBOperation *rethink_op = nil;
+
+                    for(NSOperation *op in ops) {
+                        if([op isKindOfClass: [RethinkDBOperation class]]) {
+                            RethinkDBOperation *rop = (RethinkDBOperation*)op;
+                            
+                            if(rop.token == response.token) {
+                                rethink_op = rop;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if(rethink_op) {
+                        rethink_op.response = response;
+                    } else {
+                        NSLog(@"Could not find an operation with the token: %lld", rethink_op.token);
+                    }
+                } else {
+                    NSLog(@"Got a response without a token!");
+                }
+            }
+            break;
+        }
+        case NSStreamEventOpenCompleted:
+            break;
+        case NSStreamEventHasSpaceAvailable:
+            break;
+        case NSStreamEventErrorOccurred:
+            break;
+        case NSStreamEventNone:
+            break;
+    }
+
 }
 
 #pragma mark -
@@ -610,26 +737,42 @@ static NSDictionary* term_name_to_type = nil;
     return client;
 }
 
-- (Response*) transmit:(Query_Builder*) query {
-    NSData* response_data;
+- (RethinkDBOperation*) transmitAsync:(Query_Builder*) query {
+    [token_lock lock];
+    int64_t query_token = token++;
+    [token_lock unlock];
     
-    // make sure only one thread can access the actual socket at any one time!
-    [lock lock];
-    @try {
-        [query setToken: token++];
+    NSBlockOperation *send_op = [NSBlockOperation blockOperationWithBlock:^{
+        [query setToken: query_token];
         Query* q = [query build];
         
         int32_t size = [q serializedSize];
-        [pb_output_stream writeRawLittleEndian32: size];
-        [q writeToCodedOutputStream: pb_output_stream];
-        [pb_output_stream flush];
-        
-        int32_t response_size = [pb_input_stream readRawLittleEndian32];
-        response_data = [pb_input_stream readRawData: response_size];
-    } @finally {
-        [lock unlock];
+        [socket_lock lock];
+        @try {
+            [pb_output_stream writeRawLittleEndian32: size];
+            [q writeToCodedOutputStream: pb_output_stream];
+            [pb_output_stream flush];
+        } @finally {
+            [socket_lock unlock];
+        }
+    }];
+    
+    RethinkDBOperation *response_op = [[RethinkDBOperation alloc] initWithToken: query_token];
+    [response_op addDependency: send_op];
+    
+    [queue addOperation: send_op];
+    [queue addOperation: response_op];
+    
+    return response_op;
+}
+
+- (Response*) transmit:(Query_Builder*) query {
+    RethinkDBOperation *op = [self transmitAsync: query];
+    NSRunLoop *loop = [NSRunLoop currentRunLoop];
+    while(!op.isFinished) {
+        [loop runUntilDate: [NSDate date]];
     }
-    return [Response parseFromData: response_data];
+    return [op response];
 }
 
 #pragma mark -
@@ -643,49 +786,87 @@ static NSDictionary* term_name_to_type = nil;
     return variable_number++;
 }
 
-- (id) run:(Term*) toRun withQuery:(Query*)query error:(NSError**) error {
-    if(query == nil) {
-        query = _query;
+- (RethinkDBOperation*) run:(Term*) toRun withQuery:(Query*)query then:(RethinkDbSuccessBlock)success fail:(RethinkDbErrorBlock)error {
+    if(connection) {
+        return [connection run: toRun withQuery: query then: success fail: error];
+    }
+    
+    if(input_stream == nil || output_stream == nil) {
+        @throw [NSException exceptionWithName: rethink_error reason: @"not connected" userInfo: nil];
+    }
+    
+    Query_Builder* toExecute = [Query_Builder new];
+    [toExecute mergeFrom: _query];
+    toExecute.type = Query_QueryTypeStart;
+    toExecute.query = toRun;
+    
+    if(query) {
+        [toExecute mergeFrom: query];
+    }
+    toExecute.type = Query_QueryTypeStart;
+    toExecute.query = toRun;
+    
+    RethinkDBOperation *op = [self transmitAsync: toExecute];
+    NSBlockOperation *after = [NSBlockOperation blockOperationWithBlock:^{
+        Response* response = op.response;
+        if(response.type == Response_ResponseTypeClientError || response.type == Response_ResponseTypeCompileError || response.type == Response_ResponseTypeRuntimeError) {
+            if(error) {
+                // TODO: give more details when something goes wrong
+                Datum* errorDatum = [[response response] objectAtIndex: 0];
+                NSError *err = [NSError errorWithDomain: rethink_error code: response.type userInfo: [NSDictionary dictionaryWithObjectsAndKeys:
+                                                                                                      errorDatum.rStr, NSLocalizedDescriptionKey,
+                                                                                                      [self decodeErrorResponse: response], @"RethinkDB Response",
+                                                                                                      nil]];
+                
+                error(err);
+            }
+
+        } else {
+            if(success) {
+                id value = [self decodeResponse: response];
+                success(value);
+            }
+        }
+    }];
+    
+    [after addDependency: op];
+    [queue addOperation: after];
+    
+    return op;
+}
+
+- (RethinkDBOperation*) runThen:(RethinkDbSuccessBlock)success fail:(RethinkDbErrorBlock)error {
+    if(_term == nil) {
+        @throw [NSException exceptionWithName: rethink_error reason: @"No query term" userInfo: nil];
     }
     
     if(connection) {
-        return [connection run: toRun withQuery: query error: error];
+        return [connection runThen: success fail: error];
     }
     
-    if(input_stream && output_stream) {
-        Query_Builder* toExecute = [Query_Builder new];
-        if(query) {
-            [toExecute mergeFrom: query];
-        }
-        toExecute.type = Query_QueryTypeStart;
-        toExecute.query = toRun;
-
-        
-        @try {
-            Response* response = [self transmit: toExecute];
-            if(response.type == Response_ResponseTypeClientError || response.type == Response_ResponseTypeCompileError || response.type == Response_ResponseTypeRuntimeError) {
-                if(error) {
-                    // TODO: give more details when something goes wrong
-                    Datum* errorDatum = [[response response] objectAtIndex: 0];
-                    *error = [NSError errorWithDomain: rethink_error code: response.type userInfo: [NSDictionary dictionaryWithObjectsAndKeys:
-                                                                                                    errorDatum.rStr, NSLocalizedDescriptionKey,
-                                                                                                    [self decodeErrorResponse: response], @"RethinkDB Response",
-                                                                                                    nil]];
-                }
-                return nil;
-            }
-            
-            return [self decodeResponse: response];
-            
-        }
-        @catch (NSException *exception) {
-            RETHINK_ERROR(-3, [exception reason]);
-            return nil;
-        }
-    }
-    
-    RETHINK_ERROR(-2, @"Connection is not open");
     return nil;
+}
+
+- (id) run:(Term*) toRun withQuery:(Query*)query error:(NSError**) error {
+    __block id result = nil;
+    __block BOOL done = NO;
+    
+    NSOperation* op = [self run: toRun withQuery: query then:^(id response) {
+        result = response;
+        done = YES;
+    } fail:^(NSError *err) {
+        if(error) {
+            *error = err;
+        }
+        done = YES;
+    }];
+    
+    NSRunLoop *loop = [NSRunLoop currentRunLoop];
+    while(op && !done) {
+        [loop runUntilDate: [NSDate date]];
+    }
+
+    return result;
 }
 
 - (id) run:(NSError**)error {
