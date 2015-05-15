@@ -37,9 +37,18 @@
 typedef enum {
   VersionDummy_VersionV01 = 1063369270,
   VersionDummy_VersionV02 = 1915781601,
+  VersionDummy_VersionV03 = 1601562686,
+  VersionDummy_VersionV04 = 1074539808,
 } VersionDummy_Version;
 
 BOOL VersionDummy_VersionIsValidValue(VersionDummy_Version value);
+
+typedef enum {
+  VersionDummy_ProtocolProtobuf = 656407617,
+  VersionDummy_ProtocolJson = 2120839367,
+} VersionDummy_Protocol;
+
+BOOL VersionDummy_ProtocolIsValidValue(VersionDummy_Protocol value);
 
 typedef enum {
   Query_QueryTypeStart = 1,
@@ -70,6 +79,16 @@ typedef enum {
 BOOL Response_ResponseTypeIsValidValue(Response_ResponseType value);
 
 typedef enum {
+  Response_ResponseNoteSequenceFeed = 1,
+  Response_ResponseNoteAtomFeed = 2,
+  Response_ResponseNoteOrderByLimitFeed = 3,
+  Response_ResponseNoteUnionedFeed = 4,
+  Response_ResponseNoteIncludesStates = 5,
+} Response_ResponseNote;
+
+BOOL Response_ResponseNoteIsValidValue(Response_ResponseNote value);
+
+typedef enum {
   Datum_DatumTypeRNull = 1,
   Datum_DatumTypeRBool = 2,
   Datum_DatumTypeRNum = 3,
@@ -87,6 +106,8 @@ typedef enum {
   Term_TermTypeMakeObj = 3,
   Term_TermTypeVar = 10,
   Term_TermTypeJavascript = 11,
+  Term_TermTypeUuid = 169,
+  Term_TermTypeHttp = 153,
   Term_TermTypeError = 12,
   Term_TermTypeImplicitVar = 13,
   Term_TermTypeDb = 14,
@@ -105,6 +126,9 @@ typedef enum {
   Term_TermTypeMul = 26,
   Term_TermTypeDiv = 27,
   Term_TermTypeMod = 28,
+  Term_TermTypeFloor = 183,
+  Term_TermTypeCeil = 184,
+  Term_TermTypeRound = 185,
   Term_TermTypeAppend = 29,
   Term_TermTypePrepend = 80,
   Term_TermTypeDifference = 95,
@@ -115,38 +139,40 @@ typedef enum {
   Term_TermTypeSlice = 30,
   Term_TermTypeSkip = 70,
   Term_TermTypeLimit = 71,
-  Term_TermTypeIndexesOf = 87,
+  Term_TermTypeOffsetsOf = 87,
   Term_TermTypeContains = 93,
   Term_TermTypeGetField = 31,
   Term_TermTypeKeys = 94,
+  Term_TermTypeObject = 143,
   Term_TermTypeHasFields = 32,
   Term_TermTypeWithFields = 96,
   Term_TermTypePluck = 33,
   Term_TermTypeWithout = 34,
   Term_TermTypeMerge = 35,
-  Term_TermTypeBetween = 36,
+  Term_TermTypeBetweenDeprecated = 36,
+  Term_TermTypeBetween = 182,
   Term_TermTypeReduce = 37,
   Term_TermTypeMap = 38,
   Term_TermTypeFilter = 39,
-  Term_TermTypeConcatmap = 40,
-  Term_TermTypeOrderby = 41,
+  Term_TermTypeConcatMap = 40,
+  Term_TermTypeOrderBy = 41,
   Term_TermTypeDistinct = 42,
   Term_TermTypeCount = 43,
   Term_TermTypeIsEmpty = 86,
   Term_TermTypeUnion = 44,
   Term_TermTypeNth = 45,
-  Term_TermTypeGroupedMapReduce = 46,
-  Term_TermTypeGroupby = 47,
+  Term_TermTypeBracket = 170,
   Term_TermTypeInnerJoin = 48,
   Term_TermTypeOuterJoin = 49,
   Term_TermTypeEqJoin = 50,
   Term_TermTypeZip = 72,
+  Term_TermTypeRange = 173,
   Term_TermTypeInsertAt = 82,
   Term_TermTypeDeleteAt = 83,
   Term_TermTypeChangeAt = 84,
   Term_TermTypeSpliceAt = 85,
   Term_TermTypeCoerceTo = 51,
-  Term_TermTypeTypeof = 52,
+  Term_TermTypeTypeOf = 52,
   Term_TermTypeUpdate = 53,
   Term_TermTypeDelete = 54,
   Term_TermTypeReplace = 55,
@@ -157,17 +183,23 @@ typedef enum {
   Term_TermTypeTableCreate = 60,
   Term_TermTypeTableDrop = 61,
   Term_TermTypeTableList = 62,
+  Term_TermTypeConfig = 174,
+  Term_TermTypeStatus = 175,
+  Term_TermTypeWait = 177,
+  Term_TermTypeReconfigure = 176,
+  Term_TermTypeRebalance = 179,
   Term_TermTypeSync = 138,
   Term_TermTypeIndexCreate = 75,
   Term_TermTypeIndexDrop = 76,
   Term_TermTypeIndexList = 77,
   Term_TermTypeIndexStatus = 139,
   Term_TermTypeIndexWait = 140,
+  Term_TermTypeIndexRename = 156,
   Term_TermTypeFuncall = 64,
   Term_TermTypeBranch = 65,
-  Term_TermTypeAny = 66,
-  Term_TermTypeAll = 67,
-  Term_TermTypeForeach = 68,
+  Term_TermTypeOr = 66,
+  Term_TermTypeAnd = 67,
+  Term_TermTypeForEach = 68,
   Term_TermTypeFunc = 69,
   Term_TermTypeAsc = 73,
   Term_TermTypeDesc = 74,
@@ -178,6 +210,7 @@ typedef enum {
   Term_TermTypeSample = 81,
   Term_TermTypeDefault = 92,
   Term_TermTypeJson = 98,
+  Term_TermTypeToJsonString = 172,
   Term_TermTypeIso8601 = 99,
   Term_TermTypeToIso8601 = 100,
   Term_TermTypeEpochTime = 101,
@@ -217,6 +250,34 @@ typedef enum {
   Term_TermTypeNovember = 124,
   Term_TermTypeDecember = 125,
   Term_TermTypeLiteral = 137,
+  Term_TermTypeGroup = 144,
+  Term_TermTypeSum = 145,
+  Term_TermTypeAvg = 146,
+  Term_TermTypeMin = 147,
+  Term_TermTypeMax = 148,
+  Term_TermTypeSplit = 149,
+  Term_TermTypeUngroup = 150,
+  Term_TermTypeRandom = 151,
+  Term_TermTypeChanges = 152,
+  Term_TermTypeArgs = 154,
+  Term_TermTypeBinary = 155,
+  Term_TermTypeGeojson = 157,
+  Term_TermTypeToGeojson = 158,
+  Term_TermTypePoint = 159,
+  Term_TermTypeLine = 160,
+  Term_TermTypePolygon = 161,
+  Term_TermTypeDistance = 162,
+  Term_TermTypeIntersects = 163,
+  Term_TermTypeIncludes = 164,
+  Term_TermTypeCircle = 165,
+  Term_TermTypeGetIntersecting = 166,
+  Term_TermTypeFill = 167,
+  Term_TermTypeGetNearest = 168,
+  Term_TermTypePolygonSub = 171,
+  Term_TermTypeMinval = 180,
+  Term_TermTypeMaxval = 181,
+  Term_TermTypeMaterialize = 5000,
+  Term_TermTypeSort = 5001,
 } Term_TermType;
 
 BOOL Term_TermTypeIsValidValue(Term_TermType value);
@@ -551,16 +612,19 @@ BOOL Term_TermTypeIsValidValue(Term_TermType value);
   Datum* profile;
   Response_ResponseType type;
   NSMutableArray * responseArray;
+  PBAppendableArray * notesArray;
 }
 - (BOOL) hasType;
 - (BOOL) hasToken;
 - (BOOL) hasBacktrace;
 - (BOOL) hasProfile;
 @property (readonly) Response_ResponseType type;
+@property (readonly, strong) PBArray * notes;
 @property (readonly) int64_t token;
 @property (readonly, strong) NSArray * response;
 @property (readonly, strong) Backtrace* backtrace;
 @property (readonly, strong) Datum* profile;
+- (Response_ResponseNote)notesAtIndex:(NSUInteger)index;
 - (Datum*)responseAtIndex:(NSUInteger)index;
 
 + (Response*) defaultInstance;
@@ -602,6 +666,13 @@ BOOL Term_TermTypeIsValidValue(Term_TermType value);
 - (Response_ResponseType) type;
 - (Response_Builder*) setType:(Response_ResponseType) value;
 - (Response_Builder*) clearType;
+
+- (PBAppendableArray *)notes;
+- (Response_ResponseNote)notesAtIndex:(NSUInteger)index;
+- (Response_Builder *)addNotes:(Response_ResponseNote)value;
+- (Response_Builder *)setNotesArray:(NSArray *)array;
+- (Response_Builder *)setNotesValues:(const Response_ResponseNote *)values count:(NSUInteger)count;
+- (Response_Builder *)clearNotes;
 
 - (BOOL) hasToken;
 - (int64_t) token;

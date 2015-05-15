@@ -148,8 +148,8 @@ typedef id <RethinkDBRunnable> (^RethinkDbExpressionFunction)(NSArray* arguments
 - (id <RethinkDBObject>) reduce:(RethinkDbReductionFunction)function;
 - (id <RethinkDBObject>) count;
 - (id <RethinkDBArray>) distinct;
-- (id <RethinkDBObject>) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction withBase:(id)base;
-- (id <RethinkDBObject>) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction;
+//- (id <RethinkDBObject>) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction withBase:(id)base;
+//- (id <RethinkDBObject>) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction;
 - (id <RethinkDBArray>) groupBy:(id)columns reduce:(NSDictionary*)reductionObject;
 - (id <RethinkDBArray>) groupByAndCount:(id)columns;
 - (id <RethinkDBArray>) groupBy:(id)columns sum:(NSString*)attribute;

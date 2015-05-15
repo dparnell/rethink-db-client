@@ -10,33 +10,33 @@
 	<string>RethinkDbClient</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>68158A24-8883-4523-9778-14DDBB41600A</key>
-		<string>ssh://github.com/dparnell/rethink-db-client.git</string>
-		<key>CDBA34CD-91A3-4153-A778-0A7361F90DB3</key>
-		<string>ssh://github.com/dparnell/protobuf-objc.git</string>
+		<key>0188F2A2CDE1E23FB54BA7DEC720DB0076A94A2D</key>
+		<string>github.com:dparnell/protobuf-objc.git</string>
+		<key>F88401936C6D0725B6F6B852C2EDCBCB2AB15318</key>
+		<string>github.com:dparnell/rethink-db-client.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>RethinkDbClient.xcodeproj/project.xcworkspace</string>
+	<string>RethinkDbClient.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>68158A24-8883-4523-9778-14DDBB41600A</key>
+		<key>0188F2A2CDE1E23FB54BA7DEC720DB0076A94A2D</key>
+		<string>../..RethinkDbClient/Protocol/protobuf-objc/</string>
+		<key>F88401936C6D0725B6F6B852C2EDCBCB2AB15318</key>
 		<string>../..</string>
-		<key>CDBA34CD-91A3-4153-A778-0A7361F90DB3</key>
-		<string>../../RethinkDbClient/Protocol/protobuf-objc</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
-	<string>ssh://github.com/dparnell/rethink-db-client.git</string>
+	<string>github.com:dparnell/rethink-db-client.git</string>
 	<key>IDESourceControlProjectVersion</key>
-	<integer>110</integer>
+	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>68158A24-8883-4523-9778-14DDBB41600A</string>
+	<string>F88401936C6D0725B6F6B852C2EDCBCB2AB15318</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>CDBA34CD-91A3-4153-A778-0A7361F90DB3</string>
+			<string>0188F2A2CDE1E23FB54BA7DEC720DB0076A94A2D</string>
 			<key>IDESourceControlWCCName</key>
 			<string>protobuf-objc</string>
 		</dict>
@@ -44,7 +44,7 @@
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>68158A24-8883-4523-9778-14DDBB41600A</string>
+			<string>F88401936C6D0725B6F6B852C2EDCBCB2AB15318</string>
 			<key>IDESourceControlWCCName</key>
 			<string>RethinkDbClient</string>
 		</dict>

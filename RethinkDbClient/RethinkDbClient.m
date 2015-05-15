@@ -266,29 +266,29 @@ static NSDictionary* term_name_to_type = nil;
                              [NSNumber numberWithInt: Term_TermTypeWithFields], @"WITH_FIELDS",
                              [NSNumber numberWithInt: Term_TermTypeKeys], @"KEYS",
                              [NSNumber numberWithInt: Term_TermTypePluck], @"PLUCK",
-                             [NSNumber numberWithInt: Term_TermTypeIndexesOf], @"INDEXES_OF",
+                             [NSNumber numberWithInt: Term_TermTypeOffsetsOf], @"OFFSETS_OF",
                              [NSNumber numberWithInt: Term_TermTypeWithout], @"WITHOUT",
                              [NSNumber numberWithInt: Term_TermTypeMerge], @"MERGE",
                              [NSNumber numberWithInt: Term_TermTypeBetween], @"BETWEEN",
                              [NSNumber numberWithInt: Term_TermTypeReduce], @"REDUCE",
                              [NSNumber numberWithInt: Term_TermTypeMap], @"MAP",
                              [NSNumber numberWithInt: Term_TermTypeFilter], @"FILTER",
-                             [NSNumber numberWithInt: Term_TermTypeConcatmap], @"CONCATMAP",
-                             [NSNumber numberWithInt: Term_TermTypeOrderby], @"ORDERBY",
+                             [NSNumber numberWithInt: Term_TermTypeConcatMap], @"CONCATMAP",
+                             [NSNumber numberWithInt: Term_TermTypeOrderBy], @"ORDERBY",
                              [NSNumber numberWithInt: Term_TermTypeDistinct], @"DISTINCT",
                              [NSNumber numberWithInt: Term_TermTypeCount], @"COUNT",
                              [NSNumber numberWithInt: Term_TermTypeUnion], @"UNION",
                              [NSNumber numberWithInt: Term_TermTypeNth], @"NTH",
                              [NSNumber numberWithInt: Term_TermTypeMatch], @"MATCH",
                              [NSNumber numberWithInt: Term_TermTypeIsEmpty], @"IS_EMPTY",
-                             [NSNumber numberWithInt: Term_TermTypeGroupedMapReduce], @"GROUPED_MAP_REDUCE",
-                             [NSNumber numberWithInt: Term_TermTypeGroupby], @"GROUPBY",
+//                             [NSNumber numberWithInt: Term_TermTypeGroupedMapReduce], @"GROUPED_MAP_REDUCE",
+//                             [NSNumber numberWithInt: Term_TermTypeGroupby], @"GROUPBY",
                              [NSNumber numberWithInt: Term_TermTypeInnerJoin], @"INNER_JOIN",
                              [NSNumber numberWithInt: Term_TermTypeOuterJoin], @"OUTER_JOIN",
                              [NSNumber numberWithInt: Term_TermTypeEqJoin], @"EQ_JOIN",
                              [NSNumber numberWithInt: Term_TermTypeZip], @"ZIP",
                              [NSNumber numberWithInt: Term_TermTypeCoerceTo], @"COERCE_TO",
-                             [NSNumber numberWithInt: Term_TermTypeTypeof], @"TYPEOF",
+                             [NSNumber numberWithInt: Term_TermTypeTypeOf], @"TYPEOF",
                              [NSNumber numberWithInt: Term_TermTypeInfo], @"INFO",
                              [NSNumber numberWithInt: Term_TermTypeSample], @"SAMPLE",
                              [NSNumber numberWithInt: Term_TermTypeUpdate], @"UPDATE",
@@ -310,9 +310,9 @@ static NSDictionary* term_name_to_type = nil;
                              [NSNumber numberWithInt: Term_TermTypeFuncall], @"FUNCALL",
                              [NSNumber numberWithInt: Term_TermTypeDefault], @"DEFAULT",
                              [NSNumber numberWithInt: Term_TermTypeBranch], @"BRANCH",
-                             [NSNumber numberWithInt: Term_TermTypeAny], @"ANY",
-                             [NSNumber numberWithInt: Term_TermTypeAll], @"ALL",
-                             [NSNumber numberWithInt: Term_TermTypeForeach], @"FOREACH",
+                             [NSNumber numberWithInt: Term_TermTypeOr], @"OR",
+                             [NSNumber numberWithInt: Term_TermTypeAnd], @"AND",
+                             [NSNumber numberWithInt: Term_TermTypeForEach], @"FOREACH",
                              [NSNumber numberWithInt: Term_TermTypeFunc], @"FUNC",
                              [NSNumber numberWithInt: Term_TermTypeAsc], @"ASC",
                              [NSNumber numberWithInt: Term_TermTypeDesc], @"DESC",
@@ -953,16 +953,16 @@ static NSDictionary* term_name_to_type = nil;
 }
 
 - (RethinkDbClient*) concatMap:(RethinkDbMappingFunction)function {
-    return [self mapLike: function type: Term_TermTypeConcatmap];
+    return [self mapLike: function type: Term_TermTypeConcatMap];
 }
 
 - (RethinkDbClient*) orderBy:(id)order {
     if([order isKindOfClass: [NSString class]]) {
-        return [self clientWithTerm: [self termWithType: Term_TermTypeOrderby andArgs: [NSArray arrayWithObjects: self, order, nil]]];
+        return [self clientWithTerm: [self termWithType: Term_TermTypeOrderBy andArgs: [NSArray arrayWithObjects: self, order, nil]]];
     }
     
     NSArray* args = [[NSArray arrayWithObject: self] arrayByAddingObjectsFromArray: order];
-    return [self clientWithTerm: [self termWithType: Term_TermTypeOrderby andArgs: args]];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeOrderBy andArgs: args]];
 }
 
 - (RethinkDbClient*) skip:(NSInteger)count {
@@ -982,11 +982,11 @@ static NSDictionary* term_name_to_type = nil;
 }
 
 - (RethinkDbClient*) indexesOf:(id)datum {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeIndexesOf andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(datum), nil]]];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeOffsetsOf andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(datum), nil]]];
 }
 
 - (RethinkDbClient*) indexesOfPredicate:(RethinkDbMappingFunction)function {
-    return [self mapLike: function type: Term_TermTypeIndexesOf];
+    return [self mapLike: function type: Term_TermTypeOffsetsOf];
 }
 
 - (RethinkDbClient*) inEmpty {
@@ -1037,6 +1037,7 @@ static NSDictionary* term_name_to_type = nil;
     return [self clientWithTerm: [self termWithType: Term_TermTypeDistinct andArg: self]];
 }
 
+/*
 - (RethinkDbClient*) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction withBase:(id)base {
     NSNumber* group_num = [NSNumber numberWithInteger: [self nextVariable]];
     NSNumber* map_num = [NSNumber numberWithInteger: [self nextVariable]];
@@ -1071,6 +1072,7 @@ static NSDictionary* term_name_to_type = nil;
 - (id <RethinkDBObject>) group:(RethinkDbGroupByFunction)groupFunction map:(RethinkDbMappingFunction)mapFunction andReduce:(RethinkDbReductionFunction)reduceFunction {
     return [self group: groupFunction map: mapFunction andReduce: reduceFunction withBase: nil];
 }
+*/
 
 - (RethinkDbClient*) groupBy:(id)columns reduce:(NSDictionary*)reductionObject {
     if([columns isKindOfClass: [NSString class]]) {
@@ -1078,7 +1080,7 @@ static NSDictionary* term_name_to_type = nil;
     }
     
     Term* reduction_literal = [self termWithType: Term_TermTypeMakeObj andArg: reductionObject];    
-    return [self clientWithTerm: [self termWithType: Term_TermTypeGroupby andArgs: [NSArray arrayWithObjects: self, columns, reduction_literal, nil]]];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGroup andArgs: [NSArray arrayWithObjects: self, columns, reduction_literal, nil]]];
 }
 
 - (id <RethinkDBObject>) groupByAndCount:(id)columns {
@@ -1262,19 +1264,19 @@ static NSDictionary* term_name_to_type = nil;
 }
 
 - (RethinkDbClient*) and:(id)expr {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeAll andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeOr andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
 }
 
 - (RethinkDbClient*) or:(id)expr {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeAny andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeOr andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
 }
 
 - (RethinkDbClient*) any:(NSArray*)expressions {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeAny andArgs: expressions]];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeOr andArgs: expressions]];
 }
 
 - (RethinkDbClient*) all:(NSArray*)expressions {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeAll andArgs: expressions]];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeAnd andArgs: expressions]];
 }
 
 #pragma mark -
@@ -1414,7 +1416,7 @@ static NSDictionary* term_name_to_type = nil;
 }
 
 - (RethinkDbClient*) forEach:(RethinkDbMappingFunction)function {
-    return [self mapLike: function type: Term_TermTypeForeach];
+    return [self mapLike: function type: Term_TermTypeForEach];
 }
 
 - (RethinkDbClient*) error:(id)message {
@@ -1446,7 +1448,7 @@ static NSDictionary* term_name_to_type = nil;
 }
 
 - (RethinkDbClient*) typeOf {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeTypeof andArg: self]];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeTypeOf andArg: self]];
 }
 
 - (RethinkDbClient*) info {

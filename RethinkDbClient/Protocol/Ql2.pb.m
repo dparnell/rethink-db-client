@@ -113,6 +113,17 @@ BOOL VersionDummy_VersionIsValidValue(VersionDummy_Version value) {
   switch (value) {
     case VersionDummy_VersionV01:
     case VersionDummy_VersionV02:
+    case VersionDummy_VersionV03:
+    case VersionDummy_VersionV04:
+      return YES;
+    default:
+      return NO;
+  }
+}
+BOOL VersionDummy_ProtocolIsValidValue(VersionDummy_Protocol value) {
+  switch (value) {
+    case VersionDummy_ProtocolProtobuf:
+    case VersionDummy_ProtocolJson:
       return YES;
     default:
       return NO;
@@ -1477,6 +1488,7 @@ static Backtrace* defaultBacktraceInstance = nil;
 
 @interface Response ()
 @property Response_ResponseType type;
+@property (strong) PBAppendableArray * notesArray;
 @property int64_t token;
 @property (strong) NSMutableArray * responseArray;
 @property (strong) Backtrace* backtrace;
@@ -1492,6 +1504,8 @@ static Backtrace* defaultBacktraceInstance = nil;
   hasType_ = !!value_;
 }
 @synthesize type;
+@synthesize notesArray;
+@dynamic notes;
 - (BOOL) hasToken {
   return !!hasToken_;
 }
@@ -1536,6 +1550,12 @@ static Response* defaultResponseInstance = nil;
 - (Response*) defaultInstance {
   return defaultResponseInstance;
 }
+- (PBArray *)notes {
+  return notesArray;
+}
+- (Response_ResponseNote)notesAtIndex:(NSUInteger)index {
+  return [notesArray int32AtIndex:index];
+}
 - (NSArray *)response {
   return responseArray;
 }
@@ -1571,6 +1591,11 @@ static Response* defaultResponseInstance = nil;
   if (self.hasProfile) {
     [output writeMessage:5 value:self.profile];
   }
+  const NSUInteger notesArrayCount = self.notesArray.count;
+  const Response_ResponseNote *notesArrayValues = (const Response_ResponseNote *)self.notesArray.data;
+  for (NSUInteger i = 0; i < notesArrayCount; ++i) {
+    [output writeEnum:6 value:notesArrayValues[i]];
+  }
   [self.unknownFields writeToCodedOutputStream:output];
 }
 - (int32_t) serializedSize {
@@ -1594,6 +1619,16 @@ static Response* defaultResponseInstance = nil;
   }
   if (self.hasProfile) {
     size_ += computeMessageSize(5, self.profile);
+  }
+  {
+    int32_t dataSize = 0;
+    const NSUInteger count = self.notesArray.count;
+    const Response_ResponseNote *values = (const Response_ResponseNote *)self.notesArray.data;
+    for (NSUInteger i = 0; i < count; ++i) {
+      dataSize += computeEnumSizeNoTag(values[i]);
+    }
+    size_ += dataSize;
+    size_ += 1 * count;
   }
   size_ += self.unknownFields.serializedSize;
   memoizedSerializedSize = size_;
@@ -1654,6 +1689,13 @@ static Response* defaultResponseInstance = nil;
                          withIndent:[NSString stringWithFormat:@"%@  ", indent]];
     [output appendFormat:@"%@}\n", indent];
   }
+  const NSUInteger notesArrayCount = self.notesArray.count;
+  if (notesArrayCount > 0) {
+    const Response_ResponseNote *notesArrayValues = (const Response_ResponseNote *)self.notesArray.data;
+    for (NSUInteger i = 0; i < notesArrayCount; ++i) {
+      [output appendFormat:@"%@%@: %d\n", indent, @"notes", notesArrayValues[i]];
+    }
+  }
   [self.unknownFields writeDescriptionTo:output withIndent:indent];
 }
 - (BOOL) isEqual:(id)other {
@@ -1674,6 +1716,7 @@ static Response* defaultResponseInstance = nil;
       (!self.hasBacktrace || [self.backtrace isEqual:otherMessage.backtrace]) &&
       self.hasProfile == otherMessage.hasProfile &&
       (!self.hasProfile || [self.profile isEqual:otherMessage.profile]) &&
+      [self.notesArray isEqualToArray:otherMessage.notesArray] &&
       (self.unknownFields == otherMessage.unknownFields || (self.unknownFields != nil && [self.unknownFields isEqual:otherMessage.unknownFields]));
 }
 - (NSUInteger) hash {
@@ -1693,6 +1736,13 @@ static Response* defaultResponseInstance = nil;
   if (self.hasProfile) {
     hashCode = hashCode * 31 + [self.profile hash];
   }
+  const NSUInteger notesArrayCount = self.notesArray.count;
+  if (notesArrayCount > 0) {
+    const Response_ResponseNote *notesArrayValues = (const Response_ResponseNote *)self.notesArray.data;
+    for (NSUInteger i = 0; i < notesArrayCount; ++i) {
+      hashCode = hashCode * 31 + notesArrayValues[i];
+    }
+  }
   hashCode = hashCode * 31 + [self.unknownFields hash];
   return hashCode;
 }
@@ -1707,6 +1757,18 @@ BOOL Response_ResponseTypeIsValidValue(Response_ResponseType value) {
     case Response_ResponseTypeClientError:
     case Response_ResponseTypeCompileError:
     case Response_ResponseTypeRuntimeError:
+      return YES;
+    default:
+      return NO;
+  }
+}
+BOOL Response_ResponseNoteIsValidValue(Response_ResponseNote value) {
+  switch (value) {
+    case Response_ResponseNoteSequenceFeed:
+    case Response_ResponseNoteAtomFeed:
+    case Response_ResponseNoteOrderByLimitFeed:
+    case Response_ResponseNoteUnionedFeed:
+    case Response_ResponseNoteIncludesStates:
       return YES;
     default:
       return NO;
@@ -1752,6 +1814,13 @@ BOOL Response_ResponseTypeIsValidValue(Response_ResponseType value) {
   }
   if (other.hasType) {
     [self setType:other.type];
+  }
+  if (other.notesArray.count > 0) {
+    if (result.notesArray == nil) {
+      result.notesArray = [other.notesArray copy];
+    } else {
+      [result.notesArray appendArray:other.notesArray];
+    }
   }
   if (other.hasToken) {
     [self setToken:other.token];
@@ -1827,6 +1896,15 @@ BOOL Response_ResponseTypeIsValidValue(Response_ResponseType value) {
         [self setProfile:[subBuilder buildPartial]];
         break;
       }
+      case 48: {
+        int32_t value = [input readEnum];
+        if (Response_ResponseNoteIsValidValue(value)) {
+          [self addNotes:value];
+        } else {
+          [unknownFields mergeVarintField:6 value:value];
+        }
+        break;
+      }
     }
   }
 }
@@ -1844,6 +1922,31 @@ BOOL Response_ResponseTypeIsValidValue(Response_ResponseType value) {
 - (Response_Builder*) clearType {
   result.hasType = NO;
   result.type = Response_ResponseTypeSuccessAtom;
+  return self;
+}
+- (PBAppendableArray *)notes {
+  return result.notesArray;
+}
+- (Response_ResponseNote)notesAtIndex:(NSUInteger)index {
+  return [result notesAtIndex:index];
+}
+- (Response_Builder *)addNotes:(Response_ResponseNote)value {
+  if (result.notesArray == nil) {
+    result.notesArray = [PBAppendableArray arrayWithValueType:PBArrayValueTypeInt32];
+  }
+  [result.notesArray addInt32:value];
+  return self;
+}
+- (Response_Builder *)setNotesArray:(NSArray *)array {
+  result.notesArray = [PBAppendableArray arrayWithArray:array valueType:PBArrayValueTypeInt32];
+  return self;
+}
+- (Response_Builder *)setNotesValues:(const Response_ResponseNote *)values count:(NSUInteger)count {
+  result.notesArray = [PBAppendableArray arrayWithValues:values count:count valueType:PBArrayValueTypeInt32];
+  return self;
+}
+- (Response_Builder *)clearNotes {
+  result.notesArray = nil;
   return self;
 }
 - (BOOL) hasToken {
@@ -2874,148 +2977,9 @@ static Term* defaultTermInstance = nil;
 - (Term_Builder*) toBuilder {
   return [Term builderWithPrototype:self];
 }
-+ (NSString*) typeToString:(Term_TermType) type {
-    switch (type) {
-        case Term_TermTypeDatum: return @"datum";
-        case Term_TermTypeMakeArray: return @"make_array";
-        case Term_TermTypeMakeObj: return @"make_obj";
-        case Term_TermTypeVar: return @"type_var";
-        case Term_TermTypeJavascript: return @"javascript";
-        case Term_TermTypeError: return @"error";
-        case Term_TermTypeImplicitVar: return @"ImplicitVar";
-        case Term_TermTypeDb: return @"Db";
-        case Term_TermTypeTable: return @"Table";
-        case Term_TermTypeGet: return @"Get";
-        case Term_TermTypeGetAll: return @"GetAll";
-        case Term_TermTypeEq: return @"Eq";
-        case Term_TermTypeNe: return @"Ne";
-        case Term_TermTypeLt: return @"Lt";
-        case Term_TermTypeLe: return @"Le";
-        case Term_TermTypeGt: return @"Gt";
-        case Term_TermTypeGe: return @"Ge";
-        case Term_TermTypeNot: return @"Not";
-        case Term_TermTypeAdd: return @"Add";
-        case Term_TermTypeSub: return @"Sub";
-        case Term_TermTypeMul: return @"Mul";
-        case Term_TermTypeDiv: return @"Div";
-        case Term_TermTypeMod: return @"Mod";
-        case Term_TermTypeAppend: return @"Append";
-        case Term_TermTypePrepend: return @"Prepend";
-        case Term_TermTypeDifference: return @"Difference";
-        case Term_TermTypeSetInsert: return @"SetInsert";
-        case Term_TermTypeSetIntersection: return @"SetIntersection";
-        case Term_TermTypeSetUnion: return @"SetUnion";
-        case Term_TermTypeSetDifference: return @"SetDifference";
-        case Term_TermTypeSlice: return @"Slice";
-        case Term_TermTypeSkip: return @"Skip";
-        case Term_TermTypeLimit: return @"Limit";
-        case Term_TermTypeIndexesOf: return @"IndexesOf";
-        case Term_TermTypeContains: return @"Contains";
-        case Term_TermTypeGetField: return @"GetField";
-        case Term_TermTypeKeys: return @"Keys";
-        case Term_TermTypeHasFields: return @"HasFields";
-        case Term_TermTypeWithFields: return @"WithFields";
-        case Term_TermTypePluck: return @"Pluck";
-        case Term_TermTypeWithout: return @"Without";
-        case Term_TermTypeMerge: return @"Merge";
-        case Term_TermTypeBetween: return @"Between";
-        case Term_TermTypeReduce: return @"Reduce";
-        case Term_TermTypeMap: return @"Map";
-        case Term_TermTypeFilter: return @"Filter";
-        case Term_TermTypeConcatmap: return @"Concatmap";
-        case Term_TermTypeOrderby: return @"Orderby";
-        case Term_TermTypeDistinct: return @"Distinct";
-        case Term_TermTypeCount: return @"Count";
-        case Term_TermTypeIsEmpty: return @"IsEmpty";
-        case Term_TermTypeUnion: return @"Union";
-        case Term_TermTypeNth: return @"Nth";
-        case Term_TermTypeGroupedMapReduce: return @"GroupedMapReduce";
-        case Term_TermTypeGroupby: return @"Groupby";
-        case Term_TermTypeInnerJoin: return @"InnerJoin";
-        case Term_TermTypeOuterJoin: return @"OuterJoin";
-        case Term_TermTypeEqJoin: return @"EqJoin";
-        case Term_TermTypeZip: return @"Zip";
-        case Term_TermTypeInsertAt: return @"InsertAt";
-        case Term_TermTypeDeleteAt: return @"DeleteAt";
-        case Term_TermTypeChangeAt: return @"ChangeAt";
-        case Term_TermTypeSpliceAt: return @"SpliceAt";
-        case Term_TermTypeCoerceTo: return @"CoerceTo";
-        case Term_TermTypeTypeof: return @"Typeof";
-        case Term_TermTypeUpdate: return @"Update";
-        case Term_TermTypeDelete: return @"Delete";
-        case Term_TermTypeReplace: return @"Replace";
-        case Term_TermTypeInsert: return @"Insert";
-        case Term_TermTypeDbCreate: return @"DbCreate";
-        case Term_TermTypeDbDrop: return @"DbDrop";
-        case Term_TermTypeDbList: return @"DbList";
-        case Term_TermTypeTableCreate: return @"TableCreate";
-        case Term_TermTypeTableDrop: return @"TableDrop";
-        case Term_TermTypeTableList: return @"TableList";
-        case Term_TermTypeSync: return @"Sync";
-        case Term_TermTypeIndexCreate: return @"IndexCreate";
-        case Term_TermTypeIndexDrop: return @"IndexDrop";
-        case Term_TermTypeIndexList: return @"IndexList";
-        case Term_TermTypeIndexStatus: return @"IndexStatus";
-        case Term_TermTypeIndexWait: return @"IndexWait";
-        case Term_TermTypeFuncall: return @"Funcall";
-        case Term_TermTypeBranch: return @"Branch";
-        case Term_TermTypeAny: return @"Any";
-        case Term_TermTypeAll: return @"All";
-        case Term_TermTypeForeach: return @"Foreach";
-        case Term_TermTypeFunc: return @"Func";
-        case Term_TermTypeAsc: return @"Asc";
-        case Term_TermTypeDesc: return @"Desc";
-        case Term_TermTypeInfo: return @"Info";
-        case Term_TermTypeMatch: return @"Match";
-        case Term_TermTypeUpcase: return @"Upcase";
-        case Term_TermTypeDowncase: return @"Downcase";
-        case Term_TermTypeSample: return @"Sample";
-        case Term_TermTypeDefault: return @"Default";
-        case Term_TermTypeJson: return @"Json";
-        case Term_TermTypeIso8601: return @"Iso8601";
-        case Term_TermTypeToIso8601: return @"ToIso8601";
-        case Term_TermTypeEpochTime: return @"EpochTime";
-        case Term_TermTypeToEpochTime: return @"ToEpochTime";
-        case Term_TermTypeNow: return @"Now";
-        case Term_TermTypeInTimezone: return @"InTimezone";
-        case Term_TermTypeDuring: return @"During";
-        case Term_TermTypeDate: return @"Date";
-        case Term_TermTypeTimeOfDay: return @"TimeOfDay";
-        case Term_TermTypeTimezone: return @"Timezone";
-        case Term_TermTypeYear: return @"Year";
-        case Term_TermTypeMonth: return @"Month";
-        case Term_TermTypeDay: return @"Day";
-        case Term_TermTypeDayOfWeek: return @"DayOfWeek";
-        case Term_TermTypeDayOfYear: return @"DayOfYear";
-        case Term_TermTypeHours: return @"Hours";
-        case Term_TermTypeMinutes: return @"Minutes";
-        case Term_TermTypeSeconds: return @"Seconds";
-        case Term_TermTypeTime: return @"Time";
-        case Term_TermTypeMonday: return @"Monday";
-        case Term_TermTypeTuesday: return @"Tuesday";
-        case Term_TermTypeWednesday: return @"Wednesday";
-        case Term_TermTypeThursday: return @"Thursday";
-        case Term_TermTypeFriday: return @"Friday";
-        case Term_TermTypeSaturday: return @"Saturday";
-        case Term_TermTypeSunday: return @"Sunday";
-        case Term_TermTypeJanuary: return @"January";
-        case Term_TermTypeFebruary: return @"February";
-        case Term_TermTypeMarch: return @"March";
-        case Term_TermTypeApril: return @"April";
-        case Term_TermTypeMay: return @"May";
-        case Term_TermTypeJune: return @"June";
-        case Term_TermTypeJuly: return @"July";
-        case Term_TermTypeAugust: return @"August";
-        case Term_TermTypeSeptember: return @"September";
-        case Term_TermTypeOctober: return @"october";
-        case Term_TermTypeNovember: return @"november";
-        case Term_TermTypeDecember: return @"december";
-        case Term_TermTypeLiteral: return @"literal";
-    }
-}
 - (void) writeDescriptionTo:(NSMutableString*) output withIndent:(NSString*) indent {
   if (self.hasType) {
-      [output appendFormat:@"%@%@: %@\n", indent, @"type", [Term typeToString: self.type]];
+    [output appendFormat:@"%@%@: %d\n", indent, @"type", self.type];
   }
   if (self.hasDatum) {
     [output appendFormat:@"%@%@ {\n", indent, @"datum"];
@@ -3087,6 +3051,8 @@ BOOL Term_TermTypeIsValidValue(Term_TermType value) {
     case Term_TermTypeMakeObj:
     case Term_TermTypeVar:
     case Term_TermTypeJavascript:
+    case Term_TermTypeUuid:
+    case Term_TermTypeHttp:
     case Term_TermTypeError:
     case Term_TermTypeImplicitVar:
     case Term_TermTypeDb:
@@ -3105,6 +3071,9 @@ BOOL Term_TermTypeIsValidValue(Term_TermType value) {
     case Term_TermTypeMul:
     case Term_TermTypeDiv:
     case Term_TermTypeMod:
+    case Term_TermTypeFloor:
+    case Term_TermTypeCeil:
+    case Term_TermTypeRound:
     case Term_TermTypeAppend:
     case Term_TermTypePrepend:
     case Term_TermTypeDifference:
@@ -3115,38 +3084,40 @@ BOOL Term_TermTypeIsValidValue(Term_TermType value) {
     case Term_TermTypeSlice:
     case Term_TermTypeSkip:
     case Term_TermTypeLimit:
-    case Term_TermTypeIndexesOf:
+    case Term_TermTypeOffsetsOf:
     case Term_TermTypeContains:
     case Term_TermTypeGetField:
     case Term_TermTypeKeys:
+    case Term_TermTypeObject:
     case Term_TermTypeHasFields:
     case Term_TermTypeWithFields:
     case Term_TermTypePluck:
     case Term_TermTypeWithout:
     case Term_TermTypeMerge:
+    case Term_TermTypeBetweenDeprecated:
     case Term_TermTypeBetween:
     case Term_TermTypeReduce:
     case Term_TermTypeMap:
     case Term_TermTypeFilter:
-    case Term_TermTypeConcatmap:
-    case Term_TermTypeOrderby:
+    case Term_TermTypeConcatMap:
+    case Term_TermTypeOrderBy:
     case Term_TermTypeDistinct:
     case Term_TermTypeCount:
     case Term_TermTypeIsEmpty:
     case Term_TermTypeUnion:
     case Term_TermTypeNth:
-    case Term_TermTypeGroupedMapReduce:
-    case Term_TermTypeGroupby:
+    case Term_TermTypeBracket:
     case Term_TermTypeInnerJoin:
     case Term_TermTypeOuterJoin:
     case Term_TermTypeEqJoin:
     case Term_TermTypeZip:
+    case Term_TermTypeRange:
     case Term_TermTypeInsertAt:
     case Term_TermTypeDeleteAt:
     case Term_TermTypeChangeAt:
     case Term_TermTypeSpliceAt:
     case Term_TermTypeCoerceTo:
-    case Term_TermTypeTypeof:
+    case Term_TermTypeTypeOf:
     case Term_TermTypeUpdate:
     case Term_TermTypeDelete:
     case Term_TermTypeReplace:
@@ -3157,17 +3128,23 @@ BOOL Term_TermTypeIsValidValue(Term_TermType value) {
     case Term_TermTypeTableCreate:
     case Term_TermTypeTableDrop:
     case Term_TermTypeTableList:
+    case Term_TermTypeConfig:
+    case Term_TermTypeStatus:
+    case Term_TermTypeWait:
+    case Term_TermTypeReconfigure:
+    case Term_TermTypeRebalance:
     case Term_TermTypeSync:
     case Term_TermTypeIndexCreate:
     case Term_TermTypeIndexDrop:
     case Term_TermTypeIndexList:
     case Term_TermTypeIndexStatus:
     case Term_TermTypeIndexWait:
+    case Term_TermTypeIndexRename:
     case Term_TermTypeFuncall:
     case Term_TermTypeBranch:
-    case Term_TermTypeAny:
-    case Term_TermTypeAll:
-    case Term_TermTypeForeach:
+    case Term_TermTypeOr:
+    case Term_TermTypeAnd:
+    case Term_TermTypeForEach:
     case Term_TermTypeFunc:
     case Term_TermTypeAsc:
     case Term_TermTypeDesc:
@@ -3178,6 +3155,7 @@ BOOL Term_TermTypeIsValidValue(Term_TermType value) {
     case Term_TermTypeSample:
     case Term_TermTypeDefault:
     case Term_TermTypeJson:
+    case Term_TermTypeToJsonString:
     case Term_TermTypeIso8601:
     case Term_TermTypeToIso8601:
     case Term_TermTypeEpochTime:
@@ -3217,6 +3195,34 @@ BOOL Term_TermTypeIsValidValue(Term_TermType value) {
     case Term_TermTypeNovember:
     case Term_TermTypeDecember:
     case Term_TermTypeLiteral:
+    case Term_TermTypeGroup:
+    case Term_TermTypeSum:
+    case Term_TermTypeAvg:
+    case Term_TermTypeMin:
+    case Term_TermTypeMax:
+    case Term_TermTypeSplit:
+    case Term_TermTypeUngroup:
+    case Term_TermTypeRandom:
+    case Term_TermTypeChanges:
+    case Term_TermTypeArgs:
+    case Term_TermTypeBinary:
+    case Term_TermTypeGeojson:
+    case Term_TermTypeToGeojson:
+    case Term_TermTypePoint:
+    case Term_TermTypeLine:
+    case Term_TermTypePolygon:
+    case Term_TermTypeDistance:
+    case Term_TermTypeIntersects:
+    case Term_TermTypeIncludes:
+    case Term_TermTypeCircle:
+    case Term_TermTypeGetIntersecting:
+    case Term_TermTypeFill:
+    case Term_TermTypeGetNearest:
+    case Term_TermTypePolygonSub:
+    case Term_TermTypeMinval:
+    case Term_TermTypeMaxval:
+    case Term_TermTypeMaterialize:
+    case Term_TermTypeSort:
       return YES;
     default:
       return NO;
