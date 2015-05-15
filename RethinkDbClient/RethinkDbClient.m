@@ -140,8 +140,13 @@ static NSString* rethink_error = @"RethinkDB Error";
                 NSInputStream* in_stream = nil;
                 NSOutputStream* out_stream = nil;
                 
-                [NSStream getStreamsToHost: host port: port_number inputStream: &in_stream outputStream: &out_stream];
-                
+                if([[NSStream class] respondsToSelector: @selector(getStreamsToHostWithName:port:inputStream:outputStream:)]) {
+                    // OSX 10.10 and higher
+                    [NSStream getStreamsToHostWithName: host.name port: port_number inputStream: &in_stream outputStream: &out_stream];
+                } else {
+                    [NSStream getStreamsToHost: host port: port_number inputStream: &in_stream outputStream: &out_stream];
+                }
+
                 if(in_stream && out_stream) {
                     NSError* stream_error;
                     NSString* auth_key = [url user];
