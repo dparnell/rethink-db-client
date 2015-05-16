@@ -35,6 +35,7 @@ extern NSString* kRethinkDbOrderedKeys;
 @protocol RethinkDBSequence;
 @protocol RethinkDBObject;
 @protocol RethinkDBArray;
+@protocol RethinkDBStream;
 @protocol RethinkDBDateTime;
 
 typedef id <RethinkDBRunnable> (^RethinkDbJoinPredicate)(id <RethinkDBSequence> left, id <RethinkDBSequence> right);
@@ -42,8 +43,12 @@ typedef id <RethinkDBRunnable> (^RethinkDbMappingFunction)(id <RethinkDBObject> 
 typedef id <RethinkDBRunnable> (^RethinkDbReductionFunction)(id <RethinkDBObject> accumulator, id <RethinkDBObject> value);
 typedef id <RethinkDBRunnable> (^RethinkDbGroupByFunction)(id <RethinkDBObject> row);
 typedef id <RethinkDBRunnable> (^RethinkDbExpressionFunction)(NSArray* arguments);
+
+typedef void (^RethinkDbDoneBlock)();
 typedef void (^RethinkDbSuccessBlock)(id response);
+typedef BOOL (^RethinkDbCursorValueBlock)(id response);
 typedef void (^RethinkDbErrorBlock)(NSError *error);
+typedef void (^RethinkDbArrayBlock)(NSArray *array);
 
 @interface RethinkDBOperation : NSOperation
 
@@ -51,6 +56,27 @@ typedef void (^RethinkDbErrorBlock)(NSError *error);
 
 @end
 
+@interface RethinkDBCursor : NSObject
+
+- (void) each:(RethinkDbCursorValueBlock)row fail:(RethinkDbErrorBlock) error;
+- (void) close;
+
+@property (readonly) int64_t token;
+
+@end
+
+@interface RethinkDBSequenceCursor : RethinkDBCursor
+
+- (void) each:(RethinkDbCursorValueBlock)row done:(RethinkDbDoneBlock) done fail:(RethinkDbErrorBlock) error;
+- (void) next:(RethinkDbCursorValueBlock)success fail:(RethinkDbErrorBlock) error;
+- (void) toArrayThen:(RethinkDbArrayBlock)success fail:(RethinkDbErrorBlock) error;
+- (NSArray*) toArray:(NSError**)error;
+
+@end
+
+@interface RethinkDBChangeFeed : RethinkDBCursor
+
+@end
 
 @protocol RethinkDBRunnable <NSObject>
 
@@ -182,6 +208,8 @@ typedef void (^RethinkDbErrorBlock)(NSError *error);
 - (id <RethinkDBSequence>) deleteAt:(NSUInteger)index;
 - (id <RethinkDBSequence>) changeAt:(NSUInteger)index value:(id)value;
 - (id <RethinkDBArray>) keys;
+- (id <RethinkDBStream>) changes:(NSDictionary*)options;
+
 @end
 
 @protocol RethinkDBArray <RethinkDBSequence>

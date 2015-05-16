@@ -30,6 +30,8 @@
 #import "RethinkDbClient.h"
 #import <ProtocolBuffers/ProtocolBuffers.h>
 #import "Ql2.pb.h"
+#import "Internals/RethinkDBClient-Private.h"
+#import "Internals/RethinkDBCursors-Private.h"
 
 NSString* kRethinkDbOrderedKeys = @"__RethinkDb__Ordered__Keys__";
 
@@ -38,6 +40,9 @@ static NSString* rethink_error = @"RethinkDB Error";
 #define ERROR(x) if(error) *error = x
 #define RETHINK_ERROR(x,y) if(error) *error = [NSError errorWithDomain: rethink_error code: x userInfo: [NSDictionary dictionaryWithObject: y forKey: NSLocalizedDescriptionKey]]
 #define CHECK_NULL(x) (x == nil ? [NSNull null] : x)
+
+#pragma mark -
+#pragma mark RethingDBOperation
 
 @interface RethinkDBOperation (Private)
 
@@ -86,13 +91,9 @@ static NSString* rethink_error = @"RethinkDB Error";
 }
 @end
 
-@interface RethinkDbClient  (Private) <NSStreamDelegate>
+#pragma mark -
+#pragma mark RethinkDBClient
 
-- (id) initWithConnection:(RethinkDbClient*)parent;
-
-@property (retain) Term* term;
-
-@end
 
 @implementation RethinkDbClient {
     int64_t token;
@@ -111,6 +112,7 @@ static NSString* rethink_error = @"RethinkDB Error";
     __strong NSMutableData *_partial_data;
     __strong Query *_query;
     __strong Term *_term;
+    __strong NSMutableArray *cursors;
 }
 
 #pragma mark -
@@ -230,6 +232,7 @@ static NSString* rethink_error = @"RethinkDB Error";
         
         [input_stream setDelegate: self];
         [input_stream scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSDefaultRunLoopMode];
+        cursors = [NSMutableArray new];
     }
     
     return self;
@@ -525,6 +528,17 @@ static NSDictionary* term_name_to_type = nil;
 }
 
 #pragma mark -
+#pragma mark Cursor stuff
+
+- (void) addCursor:(RethinkDBCursor*)cursor {
+    [cursors addObject: cursor];
+}
+
+- (void) removeCursor:(RethinkDBCursor*)cursor {
+    [cursors removeObject: cursor];
+}
+
+#pragma mark -
 #pragma mark Utility stuff
 
 - (id) decodeDatum:(Datum*)datum {
@@ -596,6 +610,56 @@ static NSDictionary* term_name_to_type = nil;
     return [response description];
 }
 
+- (id) decodeSequence:(Response*) response {
+    RethinkDBCursor *cursor = nil;
+    for (RethinkDBCursor *c in cursors) {
+        if(c.token == response.token) {
+            cursor = c;
+            break;
+        }
+    }
+    
+    if(cursor) {
+        cursor.response = response;
+        cursor.rows = [self decodeArray: response.response];
+        
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [cursor handleBatch];
+        });
+    } else {
+        NSUInteger C = response.notes.count;
+        for(NSUInteger i=0; i<C; i++) {
+            Response_ResponseNote note = [response notesAtIndex: i];
+            switch (note) {
+                case Response_ResponseNoteSequenceFeed:
+                case Response_ResponseNoteAtomFeed:
+                case Response_ResponseNoteOrderByLimitFeed:
+                case Response_ResponseNoteUnionedFeed:
+                case Response_ResponseNoteIncludesStates:
+                    cursor = [[RethinkDBChangeFeed alloc] initWithClient: self andToken: response.token];
+                    break;
+                    
+                default:
+                    NSLog(@"Unknown response note type: %d", note);
+                    break;
+            }
+            
+            if(cursor) {
+                break;
+            }
+        }
+        
+        if(cursor == nil) {
+            cursor = [[RethinkDBSequenceCursor alloc] initWithClient: self andToken: response.token];
+            cursor.response = response;
+            cursor.rows = [self decodeArray: response.response];
+            [self addCursor: cursor];
+        }
+    }
+ 
+    return cursor;
+}
+
 - (id) decodeResponse:(Response*) response {
     switch (response.type) {
         case Response_ResponseTypeClientError:
@@ -607,10 +671,10 @@ static NSDictionary* term_name_to_type = nil;
             return [self decodeAtomResponse: response];
 
         case Response_ResponseTypeSuccessSequence:
-            return [self decodeArray: response.response];
+            return [self decodeSequence: response];
             
         case Response_ResponseTypeSuccessPartial:
-            return [self decodeArray: response.response];
+            return [self decodeSequence: response];
             
         case Response_ResponseTypeWaitComplete:
             return [NSError errorWithDomain: rethink_error code: -1 userInfo: [NSDictionary dictionaryWithObject: @"WAIT_COMPLETE responses not yet implemented" forKey: NSLocalizedDescriptionKey]];
@@ -743,12 +807,17 @@ static NSDictionary* term_name_to_type = nil;
 }
 
 - (RethinkDBOperation*) transmitAsync:(Query_Builder*) query {
-    [token_lock lock];
-    int64_t query_token = token++;
-    [token_lock unlock];
+    int64_t query_token;
+    if(![query hasToken]) {
+        [token_lock lock];
+        query_token = token++;
+        [token_lock unlock];
+        [query setToken: query_token];
+    } else {
+        query_token = query.token;
+    }
     
     NSBlockOperation *send_op = [NSBlockOperation blockOperationWithBlock:^{
-        [query setToken: query_token];
         Query* q = [query build];
         
         int32_t size = [q serializedSize];
@@ -866,9 +935,8 @@ static NSDictionary* term_name_to_type = nil;
         done = YES;
     }];
     
-    NSRunLoop *loop = [NSRunLoop currentRunLoop];
     while(op && !done) {
-        [loop runUntilDate: [NSDate date]];
+        [[NSRunLoop currentRunLoop] runUntilDate: [NSDate date]];
     }
 
     return result;
@@ -1389,6 +1457,10 @@ static NSDictionary* term_name_to_type = nil;
 
 - (RethinkDbClient*) keys {
     return [self clientWithTerm: [self termWithType: Term_TermTypeKeys andArg: self]];
+}
+
+- (id <RethinkDBStream>) changes:(NSDictionary*)options {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeChanges arg: self andOptions: options]];
 }
 
 #pragma mark -
