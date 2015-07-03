@@ -91,6 +91,55 @@ static NSString* rethink_error = @"RethinkDB Error";
 }
 @end
 
+
+#pragma mark -
+#pragma mark NSStream additions
+
+@interface NSStream (QNetworkAdditions)
+
++ (void)qNetworkAdditions_getStreamsToHostNamed:(NSString *)hostName
+                                           port:(NSInteger)port
+                                    inputStream:(out NSInputStream **)inputStreamPtr
+                                   outputStream:(out NSOutputStream **)outputStreamPtr;
+
+@end
+
+@implementation NSStream (QNetworkAdditions)
+
++ (void)qNetworkAdditions_getStreamsToHostNamed:(NSString *)hostName
+                                           port:(NSInteger)port
+                                    inputStream:(out NSInputStream **)inputStreamPtr
+                                   outputStream:(out NSOutputStream **)outputStreamPtr
+{
+    CFReadStreamRef     readStream;
+    CFWriteStreamRef    writeStream;
+    
+    assert(hostName != nil);
+    assert( (port > 0) && (port < 65536) );
+    assert( (inputStreamPtr != NULL) || (outputStreamPtr != NULL) );
+    
+    readStream = NULL;
+    writeStream = NULL;
+    
+    CFStreamCreatePairWithSocketToHost(
+                                       NULL,
+                                       (__bridge CFStringRef) hostName,
+                                       (UInt32)port,
+                                       ((inputStreamPtr  != NULL) ? &readStream : NULL),
+                                       ((outputStreamPtr != NULL) ? &writeStream : NULL)
+                                       );
+    
+    if (inputStreamPtr != NULL) {
+        *inputStreamPtr  = CFBridgingRelease(readStream);
+    }
+    if (outputStreamPtr != NULL) {
+        *outputStreamPtr = CFBridgingRelease(writeStream);
+    }
+}
+
+@end
+
+
 #pragma mark -
 #pragma mark RethinkDBClient
 
@@ -137,85 +186,74 @@ static NSString* rethink_error = @"RethinkDB Error";
                 port_number = 28015;
             }
             
-            NSHost* host = [NSHost hostWithName: host_name];
-            if(host) {
-                NSInputStream* in_stream = nil;
-                NSOutputStream* out_stream = nil;
+            NSInputStream* in_stream = nil;
+            NSOutputStream* out_stream = nil;
+
+            [NSStream qNetworkAdditions_getStreamsToHostNamed: host_name port: port_number inputStream: &in_stream outputStream: &out_stream];
+
+            if(in_stream && out_stream) {
+                NSError* stream_error;
+                NSString* auth_key = [url user];
+                NSData* auth_key_data = [auth_key dataUsingEncoding: NSUTF8StringEncoding];
+                NSMutableData* auth_response = [NSMutableData new];
+                int8_t byte;
+                NSString* auth_response_string;
                 
-                if([[NSStream class] respondsToSelector: @selector(getStreamsToHostWithName:port:inputStream:outputStream:)]) {
-                    // OSX 10.10 and higher
-                    [NSStream getStreamsToHostWithName: host.name port: port_number inputStream: &in_stream outputStream: &out_stream];
-                } else {
-                    [NSStream getStreamsToHost: host port: port_number inputStream: &in_stream outputStream: &out_stream];
-                }
-
-                if(in_stream && out_stream) {
-                    NSError* stream_error;
-                    NSString* auth_key = [url user];
-                    NSData* auth_key_data = [auth_key dataUsingEncoding: NSUTF8StringEncoding];
-                    NSMutableData* auth_response = [NSMutableData new];
-                    int8_t byte;
-                    NSString* auth_response_string;
-                    
-                    input_stream = in_stream;
-                    output_stream = out_stream;
-                    
-                    pb_output_stream = [PBCodedOutputStream streamWithOutputStream: output_stream];
-                    [output_stream open];
-                    stream_error = [output_stream streamError];
-                    if(stream_error) {
-                        ERROR(stream_error);
-                        return nil;
-                    }
-                    pb_input_stream = [PBCodedInputStream streamWithInputStream: input_stream];
-                    stream_error = [input_stream streamError];
-                    if(stream_error) {
-                        ERROR(stream_error);
-                        return nil;
-                    }
-                    
-                    // send the protocol version down the socket
-                    [pb_output_stream writeRawLittleEndian32: VersionDummy_VersionV04];
-                    [pb_output_stream flush];
-
-                    stream_error = [output_stream streamError];
-                    if(stream_error) {
-                        ERROR(stream_error);
-                        return nil;
-                    }
-                    
-                    // now send the auth key
-                    [pb_output_stream writeRawLittleEndian32: (int32_t)[auth_key_data length]];
-                    [pb_output_stream writeRawData: auth_key_data];
-                    [pb_output_stream flush];
-
-                    // send the communication protocol
-                    [pb_output_stream writeRawLittleEndian32: VersionDummy_ProtocolProtobuf];
-                    [pb_output_stream flush];
-
-                    stream_error = [output_stream streamError];
-                    if(stream_error) {
-                        ERROR(stream_error);
-                        return nil;
-                    }
-                    
-                    while((byte = [pb_input_stream readRawByte])) {
-                        [auth_response appendBytes: &byte length: 1];
-                    }
-                    
-                    auth_response_string = [[NSString alloc] initWithData: auth_response encoding: NSUTF8StringEncoding];
-                    
-                    if(![auth_response_string isEqualToString: @"SUCCESS"]) {
-                        RETHINK_ERROR(NSURLErrorCannotConnectToHost, auth_response_string);
-                        return nil;
-                    }
-                    
-                } else {
-                    RETHINK_ERROR(NSURLErrorCannotConnectToHost, @"Connection failed");
+                input_stream = in_stream;
+                output_stream = out_stream;
+                
+                pb_output_stream = [PBCodedOutputStream streamWithOutputStream: output_stream];
+                [output_stream open];
+                stream_error = [output_stream streamError];
+                if(stream_error) {
+                    ERROR(stream_error);
                     return nil;
                 }
+                pb_input_stream = [PBCodedInputStream streamWithInputStream: input_stream];
+                stream_error = [input_stream streamError];
+                if(stream_error) {
+                    ERROR(stream_error);
+                    return nil;
+                }
+                
+                // send the protocol version down the socket
+                [pb_output_stream writeRawLittleEndian32: VersionDummy_VersionV04];
+                [pb_output_stream flush];
+
+                stream_error = [output_stream streamError];
+                if(stream_error) {
+                    ERROR(stream_error);
+                    return nil;
+                }
+                
+                // now send the auth key
+                [pb_output_stream writeRawLittleEndian32: (int32_t)[auth_key_data length]];
+                [pb_output_stream writeRawData: auth_key_data];
+                [pb_output_stream flush];
+
+                // send the communication protocol
+                [pb_output_stream writeRawLittleEndian32: VersionDummy_ProtocolProtobuf];
+                [pb_output_stream flush];
+
+                stream_error = [output_stream streamError];
+                if(stream_error) {
+                    ERROR(stream_error);
+                    return nil;
+                }
+                
+                while((byte = [pb_input_stream readRawByte])) {
+                    [auth_response appendBytes: &byte length: 1];
+                }
+                
+                auth_response_string = [[NSString alloc] initWithData: auth_response encoding: NSUTF8StringEncoding];
+                
+                if(![auth_response_string isEqualToString: @"SUCCESS"]) {
+                    RETHINK_ERROR(NSURLErrorCannotConnectToHost, auth_response_string);
+                    return nil;
+                }
+                
             } else {
-                RETHINK_ERROR(NSURLErrorDNSLookupFailed, @"Could not find host");
+                RETHINK_ERROR(NSURLErrorCannotConnectToHost, @"Connection failed");
                 return nil;
             }
             

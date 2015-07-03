@@ -68,6 +68,31 @@
 		654E9D9A185C593D0084E6F0 /* WireFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D6A185C593D0084E6F0 /* WireFormat.m */; };
 		65A02F4D1B06DAEA00F003C1 /* RethinkDBCursors.m in Sources */ = {isa = PBXBuildFile; fileRef = 65A02F4C1B06DAEA00F003C1 /* RethinkDBCursors.m */; };
 		65A02F4E1B06DAEA00F003C1 /* RethinkDBCursors.m in Sources */ = {isa = PBXBuildFile; fileRef = 65A02F4C1B06DAEA00F003C1 /* RethinkDBCursors.m */; };
+		65D4EFD51B461771001F67B7 /* AbstractMessage_Builder.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D3C185C593D0084E6F0 /* AbstractMessage_Builder.m */; };
+		65D4EFD61B461771001F67B7 /* AbstractMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D3E185C593D0084E6F0 /* AbstractMessage.m */; };
+		65D4EFD71B461771001F67B7 /* CodedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D41185C593D0084E6F0 /* CodedInputStream.m */; };
+		65D4EFD81B461771001F67B7 /* CodedOutputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D43185C593D0084E6F0 /* CodedOutputStream.m */; };
+		65D4EFD91B461771001F67B7 /* ConcreteExtensionField.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D45185C593D0084E6F0 /* ConcreteExtensionField.m */; };
+		65D4EFDA1B461771001F67B7 /* Descriptor.pb.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D47185C593D0084E6F0 /* Descriptor.pb.m */; };
+		65D4EFDB1B461771001F67B7 /* ExtendableMessage_Builder.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D49185C593D0084E6F0 /* ExtendableMessage_Builder.m */; };
+		65D4EFDC1B461771001F67B7 /* ExtendableMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D4B185C593D0084E6F0 /* ExtendableMessage.m */; };
+		65D4EFDD1B461771001F67B7 /* Field.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D4E185C593D0084E6F0 /* Field.m */; };
+		65D4EFDE1B461771001F67B7 /* GeneratedMessage_Builder.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D51185C593D0084E6F0 /* GeneratedMessage_Builder.m */; };
+		65D4EFDF1B461771001F67B7 /* MutableField.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D55185C593D0084E6F0 /* MutableField.m */; };
+		65D4EFE01B461771001F67B7 /* PBArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D57185C593D0084E6F0 /* PBArray.m */; };
+		65D4EFE11B461771001F67B7 /* PBExtensionRegistry.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D59185C593D0084E6F0 /* PBExtensionRegistry.m */; };
+		65D4EFE21B461771001F67B7 /* PBGeneratedMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D5B185C593D0084E6F0 /* PBGeneratedMessage.m */; };
+		65D4EFE31B461771001F67B7 /* PBMutableExtensionRegistry.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D5D185C593D0084E6F0 /* PBMutableExtensionRegistry.m */; };
+		65D4EFE41B461771001F67B7 /* RingBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D60185C593D0084E6F0 /* RingBuffer.m */; };
+		65D4EFE51B461771001F67B7 /* TextFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D62185C593D0084E6F0 /* TextFormat.m */; };
+		65D4EFE61B461771001F67B7 /* RethinkDBCursors.m in Sources */ = {isa = PBXBuildFile; fileRef = 65A02F4C1B06DAEA00F003C1 /* RethinkDBCursors.m */; };
+		65D4EFE71B461771001F67B7 /* UnknownFieldSet_Builder.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D64185C593D0084E6F0 /* UnknownFieldSet_Builder.m */; };
+		65D4EFE81B461771001F67B7 /* UnknownFieldSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D66185C593D0084E6F0 /* UnknownFieldSet.m */; };
+		65D4EFE91B461771001F67B7 /* Utilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D68185C593D0084E6F0 /* Utilities.m */; };
+		65D4EFEA1B461771001F67B7 /* WireFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D6A185C593D0084E6F0 /* WireFormat.m */; };
+		65D4EFEB1B461771001F67B7 /* Ql2.pb.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D37185C57610084E6F0 /* Ql2.pb.m */; };
+		65D4EFEC1B461771001F67B7 /* RethinkDbClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D18185C4EBE0084E6F0 /* RethinkDbClient.m */; };
+		65D4EFEE1B461771001F67B7 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 654E9D0A185C4EBE0084E6F0 /* Cocoa.framework */; };
 		65DBC40A1873867900CDAB4C /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 654E9D0A185C4EBE0084E6F0 /* Cocoa.framework */; };
 		65DBC4161873867900CDAB4C /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 654E9D1F185C4EBE0084E6F0 /* XCTest.framework */; };
 		65DBC4171873867900CDAB4C /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 654E9D0A185C4EBE0084E6F0 /* Cocoa.framework */; };
@@ -185,6 +210,7 @@
 		65A02F4C1B06DAEA00F003C1 /* RethinkDBCursors.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RethinkDBCursors.m; path = Internals/RethinkDBCursors.m; sourceTree = "<group>"; };
 		65A02F4F1B06DB4E00F003C1 /* RethinkDBClient-Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "RethinkDBClient-Private.h"; path = "Internals/RethinkDBClient-Private.h"; sourceTree = "<group>"; };
 		65A02F501B06DD8200F003C1 /* RethinkDBCursors-Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "RethinkDBCursors-Private.h"; path = "Internals/RethinkDBCursors-Private.h"; sourceTree = "<group>"; };
+		65D4EFF31B461771001F67B7 /* libStaticRethinkDBClientIOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libStaticRethinkDBClientIOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		65DBC4091873867900CDAB4C /* libStaticRethinkDBClient.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libStaticRethinkDBClient.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		65DBC40D1873867900CDAB4C /* StaticRethinkDBClient-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "StaticRethinkDBClient-Prefix.pch"; sourceTree = "<group>"; };
 		65DBC4151873867900CDAB4C /* StaticRethinkDBClientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StaticRethinkDBClientTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -208,6 +234,14 @@
 				654E9D21185C4EBE0084E6F0 /* Cocoa.framework in Frameworks */,
 				654E9D24185C4EBE0084E6F0 /* RethinkDbClient.framework in Frameworks */,
 				654E9D20185C4EBE0084E6F0 /* XCTest.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		65D4EFED1B461771001F67B7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				65D4EFEE1B461771001F67B7 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -251,6 +285,7 @@
 				654E9D1E185C4EBE0084E6F0 /* RethinkDbClientTests.xctest */,
 				65DBC4091873867900CDAB4C /* libStaticRethinkDBClient.a */,
 				65DBC4151873867900CDAB4C /* StaticRethinkDBClientTests.xctest */,
+				65D4EFF31B461771001F67B7 /* libStaticRethinkDBClientIOS.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -462,6 +497,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		65D4EFEF1B461771001F67B7 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		65DBC4071873867900CDAB4C /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -507,6 +549,23 @@
 			productName = RethinkDbClientTests;
 			productReference = 654E9D1E185C4EBE0084E6F0 /* RethinkDbClientTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		65D4EFD31B461771001F67B7 /* StaticRethinkDBClientIOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 65D4EFF01B461771001F67B7 /* Build configuration list for PBXNativeTarget "StaticRethinkDBClientIOS" */;
+			buildPhases = (
+				65D4EFD41B461771001F67B7 /* Sources */,
+				65D4EFED1B461771001F67B7 /* Frameworks */,
+				65D4EFEF1B461771001F67B7 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StaticRethinkDBClientIOS;
+			productName = StaticRethinkDBClient;
+			productReference = 65D4EFF31B461771001F67B7 /* libStaticRethinkDBClientIOS.a */;
+			productType = "com.apple.product-type.library.static";
 		};
 		65DBC4081873867900CDAB4C /* StaticRethinkDBClient */ = {
 			isa = PBXNativeTarget;
@@ -576,6 +635,7 @@
 				654E9D1D185C4EBE0084E6F0 /* RethinkDbClientTests */,
 				65DBC4081873867900CDAB4C /* StaticRethinkDBClient */,
 				65DBC4141873867900CDAB4C /* StaticRethinkDBClientTests */,
+				65D4EFD31B461771001F67B7 /* StaticRethinkDBClientIOS */,
 			);
 		};
 /* End PBXProject section */
@@ -644,6 +704,37 @@
 			buildActionMask = 2147483647;
 			files = (
 				654E9D2C185C4EBE0084E6F0 /* RethinkDbClientTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		65D4EFD41B461771001F67B7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				65D4EFD51B461771001F67B7 /* AbstractMessage_Builder.m in Sources */,
+				65D4EFD61B461771001F67B7 /* AbstractMessage.m in Sources */,
+				65D4EFD71B461771001F67B7 /* CodedInputStream.m in Sources */,
+				65D4EFD81B461771001F67B7 /* CodedOutputStream.m in Sources */,
+				65D4EFD91B461771001F67B7 /* ConcreteExtensionField.m in Sources */,
+				65D4EFDA1B461771001F67B7 /* Descriptor.pb.m in Sources */,
+				65D4EFDB1B461771001F67B7 /* ExtendableMessage_Builder.m in Sources */,
+				65D4EFDC1B461771001F67B7 /* ExtendableMessage.m in Sources */,
+				65D4EFDD1B461771001F67B7 /* Field.m in Sources */,
+				65D4EFDE1B461771001F67B7 /* GeneratedMessage_Builder.m in Sources */,
+				65D4EFDF1B461771001F67B7 /* MutableField.m in Sources */,
+				65D4EFE01B461771001F67B7 /* PBArray.m in Sources */,
+				65D4EFE11B461771001F67B7 /* PBExtensionRegistry.m in Sources */,
+				65D4EFE21B461771001F67B7 /* PBGeneratedMessage.m in Sources */,
+				65D4EFE31B461771001F67B7 /* PBMutableExtensionRegistry.m in Sources */,
+				65D4EFE41B461771001F67B7 /* RingBuffer.m in Sources */,
+				65D4EFE51B461771001F67B7 /* TextFormat.m in Sources */,
+				65D4EFE61B461771001F67B7 /* RethinkDBCursors.m in Sources */,
+				65D4EFE71B461771001F67B7 /* UnknownFieldSet_Builder.m in Sources */,
+				65D4EFE81B461771001F67B7 /* UnknownFieldSet.m in Sources */,
+				65D4EFE91B461771001F67B7 /* Utilities.m in Sources */,
+				65D4EFEA1B461771001F67B7 /* WireFormat.m in Sources */,
+				65D4EFEB1B461771001F67B7 /* Ql2.pb.m in Sources */,
+				65D4EFEC1B461771001F67B7 /* RethinkDbClient.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -885,6 +976,32 @@
 			};
 			name = Release;
 		};
+		65D4EFF11B461771001F67B7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "StaticRethinkDBClient/StaticRethinkDBClient-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = StaticRethinkDBClientIOS;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		65D4EFF21B461771001F67B7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "StaticRethinkDBClient/StaticRethinkDBClient-Prefix.pch";
+				PRODUCT_NAME = StaticRethinkDBClientIOS;
+				SDKROOT = iphoneos;
+			};
+			name = Release;
+		};
 		65DBC4231873867900CDAB4C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -975,6 +1092,15 @@
 			buildConfigurations = (
 				654E9D33185C4EBE0084E6F0 /* Debug */,
 				654E9D34185C4EBE0084E6F0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		65D4EFF01B461771001F67B7 /* Build configuration list for PBXNativeTarget "StaticRethinkDBClientIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				65D4EFF11B461771001F67B7 /* Debug */,
+				65D4EFF21B461771001F67B7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
