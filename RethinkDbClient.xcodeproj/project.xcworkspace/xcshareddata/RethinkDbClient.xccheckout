@@ -7,7 +7,7 @@
 	<key>IDESourceControlProjectIdentifier</key>
 	<string>52344E3A-C665-4FA0-AB86-2DC0BA000775</string>
 	<key>IDESourceControlProjectName</key>
-	<string>RethinkDbClient</string>
+	<string>project</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>0188F2A2CDE1E23FB54BA7DEC720DB0076A94A2D</key>
@@ -16,7 +16,7 @@
 		<string>github.com:dparnell/rethink-db-client.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>RethinkDbClient.xcodeproj</string>
+	<string>RethinkDbClient.xcodeproj/project.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>0188F2A2CDE1E23FB54BA7DEC720DB0076A94A2D</key>

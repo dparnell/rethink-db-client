@@ -33,6 +33,8 @@
 #import "Internals/RethinkDBClient-Private.h"
 #import "Internals/RethinkDBCursors-Private.h"
 
+//#define DUMP_MESSAGES
+
 NSString* kRethinkDbOrderedKeys = @"__RethinkDb__Ordered__Keys__";
 
 static NSString* rethink_error = @"RethinkDB Error";
@@ -306,6 +308,22 @@ static NSString* rethink_error = @"RethinkDB Error";
 #pragma mark -
 #pragma mark Input stream delegate function
 
+#ifdef DUMP_MESSAGES
+-(NSString*) dumpData:(NSData*) data {
+    NSUInteger length = [data length];
+    NSMutableString *result = [NSMutableString stringWithCapacity: length*4];
+    const unsigned char *bytes = (const unsigned char*)[data bytes];
+    for(NSUInteger i=0; i<length; i++) {
+        unsigned char byte = bytes[i];
+        if(i==0) {
+            [result appendFormat: @"%d", byte];
+        } else {
+            [result appendFormat: @",%d", byte];
+        }
+    }
+    return result;
+}
+#endif
 
 - (void)stream:(NSStream *)theStream handleEvent:(NSStreamEvent)streamEvent {
     switch (streamEvent) {
@@ -325,6 +343,9 @@ static NSString* rethink_error = @"RethinkDB Error";
             [_partial_data appendData: block];
             
             if(block.length == expected_size) {
+#ifdef DUMP_MESSAGES
+                NSLog(@"< <<%@>>", [self dumpData: _partial_data]);
+#endif
                 Response *response = [Response parseFromData: _partial_data];
                 _partial_data = nil;
                 
@@ -862,6 +883,9 @@ static NSDictionary* term_name_to_type = nil;
         [socket_lock lock];
         @try {
             [pb_output_stream writeRawLittleEndian32: size];
+#ifdef DUMP_MESSAGES
+            NSLog(@"> <<%@>>", [self dumpData: [q data]]);
+#endif
             [q writeToCodedOutputStream: pb_output_stream];
             [pb_output_stream flush];
         } @finally {
