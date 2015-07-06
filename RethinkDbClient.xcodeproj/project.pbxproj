@@ -980,6 +980,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "StaticRethinkDBClient/StaticRethinkDBClient-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -995,6 +996,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "StaticRethinkDBClient/StaticRethinkDBClient-Prefix.pch";
 				PRODUCT_NAME = StaticRethinkDBClientIOS;
