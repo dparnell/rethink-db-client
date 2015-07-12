@@ -293,7 +293,6 @@ static NSString* rethink_error = @"RethinkDB Error";
     [output_stream close];
 }
 
-
 #pragma mark -
 #pragma mark Properties
 
@@ -803,7 +802,7 @@ static NSDictionary* term_name_to_type = nil;
 - (Query_Builder*) queryBuilder {
     RethinkDbClient* client = connection;
     while(_query == nil && client) {
-        _query = connection->_query;
+        _query = client->_query;
         client = client->connection;
     }
     
@@ -924,7 +923,7 @@ static NSDictionary* term_name_to_type = nil;
 
 - (RethinkDBOperation*) run:(Term*) toRun withQuery:(Query*)query then:(RethinkDbSuccessBlock)success fail:(RethinkDbErrorBlock)error {
     if(connection) {
-        return [connection run: toRun withQuery: query then: success fail: error];
+        return [connection run: toRun withQuery: (query ? query : _query) then: success fail: error];
     }
     
     if(input_stream == nil || output_stream == nil) {
@@ -1152,7 +1151,7 @@ static NSDictionary* term_name_to_type = nil;
     
     Query_AssocPair* args = [args_builder build];
     [query addGlobalOptargs: args];
-    
+  
     db->_query = [query build];
     
     return db;

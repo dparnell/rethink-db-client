@@ -198,4 +198,12 @@
     XCTAssertEqualObjects(response, [NSNumber numberWithInt: 7], @"the result should be 7");
 }
 
+- (void) testDb {
+    NSError* error = nil;
+    XCTAssertNotNil(r, @"Connection failed");
+    
+    NSArray* table_list = [[[r db: @"db that does not exist"] tableList] run: &error];
+    XCTAssertNil(table_list, @"dbList should have failed failed");
+}
+
 @end
