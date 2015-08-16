@@ -196,7 +196,6 @@ static NSString* rethink_error = @"RethinkDB Error";
             if(in_stream && out_stream) {
                 NSError* stream_error;
                 NSString* auth_key = [url user];
-                NSData* auth_key_data = [auth_key dataUsingEncoding: NSUTF8StringEncoding];
                 NSMutableData* auth_response = [NSMutableData new];
                 int8_t byte;
                 NSString* auth_response_string;
@@ -228,9 +227,16 @@ static NSString* rethink_error = @"RethinkDB Error";
                     return nil;
                 }
                 
-                // now send the auth key
-                [pb_output_stream writeRawLittleEndian32: (int32_t)[auth_key_data length]];
-                [pb_output_stream writeRawData: auth_key_data];
+                if(auth_key && [auth_key length] > 0) {
+                    // now send the auth key
+                    NSData* auth_key_data = [auth_key dataUsingEncoding: NSUTF8StringEncoding];
+
+                    [pb_output_stream writeRawLittleEndian32: (int32_t)[auth_key_data length]];
+                    [pb_output_stream writeRawData: auth_key_data];
+                } else {
+                    // no auth key, so send 0
+                    [pb_output_stream writeRawLittleEndian32: 0];
+                }
                 [pb_output_stream flush];
 
                 // send the communication protocol
@@ -549,6 +555,7 @@ static NSDictionary* term_name_to_type = nil;
                              [NSNumber numberWithInt: Term_TermTypeNovember], @"NOVEMBER",
                              [NSNumber numberWithInt: Term_TermTypeDecember], @"DECEMBER",
                              [NSNumber numberWithInt: Term_TermTypeLiteral], @"LITERAL",
+                             [NSNumber numberWithInt: Term_TermTypeBracket], @"BRACKET",
          nil];
     }
     
@@ -1055,6 +1062,10 @@ static NSDictionary* term_name_to_type = nil;
     return [self clientWithTerm: [self termWithType: Term_TermTypeTableDrop andArg: name]];
 }
 
+- (RethinkDbClient*) tableList:(NSString*)db {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeTableList andArg: [self termWithType: Term_TermTypeDb andArg: db]]];
+}
+
 - (RethinkDbClient*) tableList {
     return [self clientWithTerm: [self termWithType: Term_TermTypeTableList]];
 }
@@ -1140,7 +1151,7 @@ static NSDictionary* term_name_to_type = nil;
     Query_Builder* query = [self queryBuilder];
     
     RethinkDbClient* db = [[RethinkDbClient alloc] initWithConnection: self];
-    
+
     Term_Builder* term_builder = [Term_Builder new];
     term_builder.type = Term_TermTypeDb;
     [term_builder addArgs: [self exprTerm: name]];
@@ -1148,6 +1159,7 @@ static NSDictionary* term_name_to_type = nil;
     Query_AssocPair_Builder* args_builder = [Query_AssocPair_Builder new];
     args_builder.key = @"db";
     args_builder.val = [term_builder build];
+    
     
     Query_AssocPair* args = [args_builder build];
     [query addGlobalOptargs: args];
@@ -1163,6 +1175,10 @@ static NSDictionary* term_name_to_type = nil;
 
 - (id <RethinkDBTable>) table:(NSString*)name {
     return [self table: name options: nil];
+}
+
+- (id <RethinkDBTable>) table:(NSString*)name db:(NSString*)database {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeTable andArgs: [NSArray arrayWithObjects: [self termWithType: Term_TermTypeDb andArg: database], name, nil]]];
 }
 
 - (RethinkDbClient*) get:(id)key {
@@ -1203,6 +1219,20 @@ static NSDictionary* term_name_to_type = nil;
 - (id <RethinkDBSequence>) filter:(id)predicate {
     return [self filter: predicate options: nil];
 }
+
+- (id <RethinkDBSequence>) filterWith:(RethinkDbFilterFunction) filter {
+    NSNumber* param_num = [NSNumber numberWithInteger: [self nextVariable]];
+    
+    RethinkDbClient* row = [self clientWithTerm: [self termWithType: Term_TermTypeVar andArg: param_num]];
+    
+    id <RethinkDBRunnable> body = filter(row);
+    
+    NSArray* args = [NSArray arrayWithObject: param_num];
+    Term* func = [self termWithType: Term_TermTypeFunc andArgs: [NSArray arrayWithObjects: args, body, nil]];
+    
+    return [self clientWithTerm: [self termWithType: Term_TermTypeFilter andArgs: [NSArray arrayWithObjects: self, func, nil]]];
+}
+
 
 #pragma mark -
 #pragma mark Joins
@@ -1422,6 +1452,14 @@ static NSDictionary* term_name_to_type = nil;
 #pragma mark -
 #pragma mark Document manipulation
 
+- (RethinkDbClient*) at:(NSObject*)key {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeBracket andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(key), nil]]];
+}
+
+- (RethinkDbClient*) field:(NSString*)key {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeGetField andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(key), nil]]];
+}
+
 - (RethinkDbClient*) row {
     return [self clientWithTerm: [self termWithType: Term_TermTypeImplicitVar]];
 }
@@ -1481,10 +1519,6 @@ static NSDictionary* term_name_to_type = nil;
 
 - (RethinkDbClient*) setDifference:(NSArray*)array {
     return [self clientWithTerm: [self termWithType: Term_TermTypeSetDifference andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(array), nil]]];
-}
-
-- (RethinkDbClient*) field:(NSString*)key {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeGetField andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(key), nil]]];
 }
 
 - (RethinkDbClient*) hasFields:(id)fields {
@@ -1583,7 +1617,7 @@ static NSDictionary* term_name_to_type = nil;
 }
 
 - (RethinkDbClient*) and:(id)expr {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeOr andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeAnd andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(expr), nil]]];
 }
 
 - (RethinkDbClient*) or:(id)expr {
@@ -1750,8 +1784,8 @@ static NSDictionary* term_name_to_type = nil;
     return [self error: nil];
 }
 
-- (RethinkDbClient*) default:(id)value {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeDefault andArgs: [NSArray arrayWithObjects: self, value, nil]]];
+- (RethinkDbClient*) defaultAs:(id)value {
+    return [self clientWithTerm: [self termWithType: Term_TermTypeDefault andArgs: [NSArray arrayWithObjects: self, CHECK_NULL(value), nil]]];
 }
 
 - (RethinkDbClient*) expr:(id)value {

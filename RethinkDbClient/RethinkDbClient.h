@@ -43,6 +43,7 @@ typedef id <RethinkDBRunnable> (^RethinkDbMappingFunction)(id <RethinkDBObject> 
 typedef id <RethinkDBRunnable> (^RethinkDbReductionFunction)(id <RethinkDBObject> accumulator, id <RethinkDBObject> value);
 typedef id <RethinkDBRunnable> (^RethinkDbGroupByFunction)(id <RethinkDBObject> row);
 typedef id <RethinkDBRunnable> (^RethinkDbExpressionFunction)(NSArray* arguments);
+typedef id <RethinkDBRunnable> (^RethinkDbFilterFunction)(id <RethinkDBObject> row);
 
 typedef void (^RethinkDbDoneBlock)();
 typedef void (^RethinkDbSuccessBlock)(id response);
@@ -98,6 +99,9 @@ typedef void (^RethinkDbArrayBlock)(NSArray *array);
 
 - (id <RethinkDBArray>) match:(NSString*)regex;
 
+- (id <RethinkDBObject>) at:(id)expr;
+- (id <RethinkDBSequence>) field:(NSString*)key;
+
 - (id <RethinkDBObject>) add:(id)expr;
 - (id <RethinkDBObject>) sub:(id)expr;
 - (id <RethinkDBObject>) mul:(id)expr;
@@ -126,13 +130,15 @@ typedef void (^RethinkDbArrayBlock)(NSArray *array);
 - (id <RethinkDBObject>) forEach:(RethinkDbMappingFunction)function;
 - (id <RethinkDBObject>) error:(id)message;
 - (id <RethinkDBObject>) error;
-- (id <RethinkDBObject>) default:(id)value;
+- (id <RethinkDBObject>) defaultAs:(id)value;
 - (id <RethinkDBObject>) expr:(id)value;
 - (id <RethinkDBObject>) js:(NSString*)script;
 - (id <RethinkDBObject>) coerceTo:(NSString*)type;
 - (id <RethinkDBObject>) typeOf;
 - (id <RethinkDBObject>) info;
 - (id <RethinkDBObject>) json:(NSString*)json;
+
+- (id <RethinkDBObject>) contains:(id)values;
 
 @end
 
@@ -161,6 +167,7 @@ typedef void (^RethinkDbArrayBlock)(NSArray *array);
 
 - (id <RethinkDBSequence>) filter:(id)predicate options:(NSDictionary*)options;
 - (id <RethinkDBSequence>) filter:(id)predicate;
+- (id <RethinkDBSequence>) filterWith:(RethinkDbFilterFunction) filter;
 - (id <RethinkDBSequence>) innerJoin:(id <RethinkDBSequence>)sequence on:(RethinkDbJoinPredicate)predicate;
 - (id <RethinkDBSequence>) outerJoin:(id <RethinkDBSequence>)sequence on:(RethinkDbJoinPredicate)predicate;
 - (id <RethinkDBSequence>) eqJoin:(NSString*)key to:(id <RethinkDBSequence>)sequence options:(NSDictionary*)options;
@@ -191,7 +198,6 @@ typedef void (^RethinkDbArrayBlock)(NSArray *array);
 - (id <RethinkDBArray>) groupByAndCount:(id)columns;
 - (id <RethinkDBArray>) groupBy:(id)columns sum:(NSString*)attribute;
 - (id <RethinkDBArray>) groupBy:(id)columns average:(NSString*)attribute;
-- (id <RethinkDBObject>) contains:(id)values;
 
 - (id <RethinkDBSequence>) append:(id)object;
 - (id <RethinkDBSequence>) prepend:(id)object;
@@ -200,7 +206,6 @@ typedef void (^RethinkDbArrayBlock)(NSArray *array);
 - (id <RethinkDBSequence>) setUnion:(id)array;
 - (id <RethinkDBSequence>) setIntersection:(id)array;
 - (id <RethinkDBSequence>) setDifference:(id)array;
-- (id <RethinkDBSequence>) field:(NSString*)key;
 - (id <RethinkDBSequence>) hasFields:(id)fields;
 - (id <RethinkDBSequence>) insert:(id)object at:(NSUInteger)index;
 - (id <RethinkDBSequence>) splice:(id)objects at:(NSUInteger)index;
@@ -248,6 +253,7 @@ typedef void (^RethinkDbArrayBlock)(NSArray *array);
 - (id <RethinkDBObject>) tableCreate:(NSString*)name options:(NSDictionary*)options;
 - (id <RethinkDBObject>) tableCreate:(NSString*)name;
 - (id <RethinkDBObject>) tableDrop:(NSString*)name;
+- (id <RethinkDBArray>) tableList:(NSString*)db;
 - (id <RethinkDBArray>) tableList;
 - (id <RethinkDBObject>) indexCreate:(NSString*)name;
 - (id <RethinkDBObject>) indexDrop:(NSString*)name;
@@ -257,6 +263,7 @@ typedef void (^RethinkDbArrayBlock)(NSArray *array);
 
 - (id <RethinkDBTable>) table:(NSString*)name options:(NSDictionary*)options;
 - (id <RethinkDBTable>) table:(NSString*)name;
+- (id <RethinkDBTable>) table:(NSString*)name db:(NSString*)database;
 
 @end
 
