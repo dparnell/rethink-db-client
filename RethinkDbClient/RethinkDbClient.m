@@ -1150,23 +1150,27 @@ static NSDictionary* term_name_to_type = nil;
 - (RethinkDbClient*) db: (NSString*)name {
     Query_Builder* query = [self queryBuilder];
     
-    RethinkDbClient* db = [[RethinkDbClient alloc] initWithConnection: self];
-
-    Term_Builder* term_builder = [Term_Builder new];
-    term_builder.type = Term_TermTypeDb;
-    [term_builder addArgs: [self exprTerm: name]];
-    
-    Query_AssocPair_Builder* args_builder = [Query_AssocPair_Builder new];
-    args_builder.key = @"db";
-    args_builder.val = [term_builder build];
-    
-    
-    Query_AssocPair* args = [args_builder build];
-    [query addGlobalOptargs: args];
-  
-    db->_query = [query build];
-    
-    return db;
+    if(connection) {
+        // this is a parameter to another function, so return a DB term
+        return [self clientWithTerm: [self termWithType: Term_TermTypeDb andArg: name]];
+    } else {
+        // this is the first thing in the query, so set the default database for the query
+        RethinkDbClient* db = [[RethinkDbClient alloc] initWithConnection: self];
+        Term_Builder* term_builder = [Term_Builder new];
+        term_builder.type = Term_TermTypeDb;
+        [term_builder addArgs: [self exprTerm: name]];
+        
+        Query_AssocPair_Builder* args_builder = [Query_AssocPair_Builder new];
+        args_builder.key = @"db";
+        args_builder.val = [term_builder build];
+        
+        
+        Query_AssocPair* args = [args_builder build];
+        [query addGlobalOptargs: args];
+      
+        db->_query = [query build];
+        return db;
+    }
 }
 
 - (RethinkDbClient*) table:(NSString*)name options:(NSDictionary*)options {
