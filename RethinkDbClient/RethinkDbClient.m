@@ -1133,6 +1133,7 @@ static NSDictionary* term_name_to_type = nil;
 
 - (RethinkDbClient*) delete:(NSDictionary*)options {
     return [self clientWithTerm: [self termWithType: Term_TermTypeDelete
+                                                arg: self
                                          andOptions: options]];
 }
 
