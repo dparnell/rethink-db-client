@@ -1142,7 +1142,7 @@ static NSDictionary* term_name_to_type = nil;
 }
 
 - (RethinkDbClient*) sync {
-    return [self clientWithTerm: [self termWithType: Term_TermTypeSync]];
+    return [self clientWithTerm: [self termWithType: Term_TermTypeSync andArg: self]];
 }
 
 #pragma mark -
