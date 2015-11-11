@@ -5,9 +5,9 @@
 	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
 	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
-	<string>52344E3A-C665-4FA0-AB86-2DC0BA000775</string>
+	<string>FC36F253-6630-4176-A35D-1CBE91F63E50</string>
 	<key>IDESourceControlProjectName</key>
-	<string>project</string>
+	<string>RethinkDB</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>0188F2A2CDE1E23FB54BA7DEC720DB0076A94A2D</key>
@@ -16,13 +16,13 @@
 		<string>github.com:dparnell/rethink-db-client.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>RethinkDbClient.xcodeproj/project.xcworkspace</string>
+	<string>RethinkDB.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>0188F2A2CDE1E23FB54BA7DEC720DB0076A94A2D</key>
-		<string>../..RethinkDbClient/Protocol/protobuf-objc/</string>
+		<string>..RethinkDbClient/Protocol/protobuf-objc/</string>
 		<key>F88401936C6D0725B6F6B852C2EDCBCB2AB15318</key>
-		<string>../..</string>
+		<string>..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>github.com:dparnell/rethink-db-client.git</string>

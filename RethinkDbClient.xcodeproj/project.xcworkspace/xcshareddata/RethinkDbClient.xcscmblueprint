@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "F88401936C6D0725B6F6B852C2EDCBCB2AB15318",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "F88401936C6D0725B6F6B852C2EDCBCB2AB15318" : 0,
+    "0188F2A2CDE1E23FB54BA7DEC720DB0076A94A2D" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "52344E3A-C665-4FA0-AB86-2DC0BA000775",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "F88401936C6D0725B6F6B852C2EDCBCB2AB15318" : "RethinkDbClient\/",
+    "0188F2A2CDE1E23FB54BA7DEC720DB0076A94A2D" : "RethinkDbClient\/RethinkDbClient\/Protocol\/protobuf-objc\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "RethinkDbClient",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 203,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "RethinkDbClient.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:dparnell\/protobuf-objc.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "0188F2A2CDE1E23FB54BA7DEC720DB0076A94A2D"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:dparnell\/rethink-db-client.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "F88401936C6D0725B6F6B852C2EDCBCB2AB15318"
+    }
+  ]
+}
