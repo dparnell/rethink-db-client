@@ -149,6 +149,7 @@ static NSString* rethink_error = @"RethinkDB Error";
 @implementation RethinkDbClient {
     int64_t token;
     NSInteger variable_number;
+    BOOL json_mode;
     
     __strong NSLock *token_lock;
     __strong NSLock *socket_lock;
@@ -187,10 +188,42 @@ static NSString* rethink_error = @"RethinkDB Error";
             } else {
                 port_number = 28015;
             }
+
+            NSString *q = [url query];
+            int protocol_version = VersionDummy_VersionV04;
+            
+            if(q) {
+                NSMutableDictionary *queryStrings = [[NSMutableDictionary alloc] init];
+                for (NSString *qs in [url.query componentsSeparatedByString:@"&"]) {
+                    NSArray *parts = [qs componentsSeparatedByString:@"="];
+
+                    NSString *key = [parts objectAtIndex:0];
+                    NSString *value = [parts objectAtIndex:1];
+                    value = [value stringByReplacingOccurrencesOfString:@"+" withString:@" "];
+                    value = [value stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+                    
+                    [queryStrings setObject: value forKey: key];
+                }
+                if([[queryStrings objectForKey: @"mode"] isEqualToString: @"pbuf"]) {
+                    json_mode = false;
+                }
+                NSString *ver = [queryStrings objectForKey: @"version"];
+                if([ver isEqualToString: @"4"]) {
+                    protocol_version = VersionDummy_VersionV04;
+                } else if([ver isEqualToString: @"3"]) {
+                    protocol_version = VersionDummy_VersionV03;
+                } else if([ver isEqualToString: @"2"]) {
+                    protocol_version = VersionDummy_VersionV02;
+                } else if([ver isEqualToString: @"1"]) {
+                    protocol_version = VersionDummy_VersionV01;
+                }
+            } else {
+                json_mode = true;
+            }
             
             NSInputStream* in_stream = nil;
             NSOutputStream* out_stream = nil;
-
+            
             [NSStream qNetworkAdditions_getStreamsToHostNamed: host_name port: port_number inputStream: &in_stream outputStream: &out_stream];
 
             if(in_stream && out_stream) {
@@ -218,7 +251,7 @@ static NSString* rethink_error = @"RethinkDB Error";
                 }
                 
                 // send the protocol version down the socket
-                [pb_output_stream writeRawLittleEndian32: VersionDummy_VersionV04];
+                [pb_output_stream writeRawLittleEndian32: protocol_version];
                 [pb_output_stream flush];
 
                 stream_error = [output_stream streamError];
@@ -240,7 +273,7 @@ static NSString* rethink_error = @"RethinkDB Error";
                 [pb_output_stream flush];
 
                 // send the communication protocol
-                [pb_output_stream writeRawLittleEndian32: VersionDummy_ProtocolProtobuf];
+                [pb_output_stream writeRawLittleEndian32: json_mode ? VersionDummy_ProtocolJson : VersionDummy_ProtocolProtobuf];
                 [pb_output_stream flush];
 
                 stream_error = [output_stream streamError];
@@ -883,16 +916,25 @@ static NSDictionary* term_name_to_type = nil;
     }
     
     NSBlockOperation *send_op = [NSBlockOperation blockOperationWithBlock:^{
-        Query* q = [query build];
-        
-        int32_t size = [q serializedSize];
+        Query *q = [query build];
+        NSData *data;
+        if(json_mode) {
+            // TODO: encode the Query as JSON
+            
+        } else {
+            data = [q data];
+        }
+        uint32_t size = (uint32_t)[data length];
         [socket_lock lock];
         @try {
+            if(json_mode) {
+                [pb_output_stream writeRawLittleEndian64: query.token];
+            }
             [pb_output_stream writeRawLittleEndian32: size];
 #ifdef DUMP_MESSAGES
-            NSLog(@"> <<%@>>", [self dumpData: [q data]]);
+            NSLog(@"> <<%@>>", [self dumpData: data]);
 #endif
-            [q writeToCodedOutputStream: pb_output_stream];
+            [pb_output_stream writeRawData: data];
             [pb_output_stream flush];
         } @finally {
             [socket_lock unlock];
