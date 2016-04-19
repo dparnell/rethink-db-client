@@ -32,6 +32,7 @@
 #import "Ql2.pb.h"
 #import "Internals/RethinkDBClient-Private.h"
 #import "Internals/RethinkDBCursors-Private.h"
+#import "Internals/QL2+JSON.h"
 
 //#define DUMP_MESSAGES
 
@@ -919,8 +920,7 @@ static NSDictionary* term_name_to_type = nil;
         Query *q = [query build];
         NSData *data;
         if(json_mode) {
-            // TODO: encode the Query as JSON
-            
+            data = [q toJSON];            
         } else {
             data = [q data];
         }

@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		65314AAA1865922D0039BDF3 /* RethinkDbClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 654E9D17185C4EBE0084E6F0 /* RethinkDbClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		653818CB1CC6D1950082A50B /* QL2+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 653818C91CC6D1950082A50B /* QL2+JSON.h */; };
+		653818CC1CC6D1950082A50B /* QL2+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 653818CA1CC6D1950082A50B /* QL2+JSON.m */; };
 		654E9D0B185C4EBE0084E6F0 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 654E9D0A185C4EBE0084E6F0 /* Cocoa.framework */; };
 		654E9D15185C4EBE0084E6F0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 654E9D13185C4EBE0084E6F0 /* InfoPlist.strings */; };
 		654E9D19185C4EBE0084E6F0 /* RethinkDbClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 654E9D18185C4EBE0084E6F0 /* RethinkDbClient.m */; };
@@ -142,6 +144,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		653818C91CC6D1950082A50B /* QL2+JSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "QL2+JSON.h"; path = "Internals/QL2+JSON.h"; sourceTree = "<group>"; };
+		653818CA1CC6D1950082A50B /* QL2+JSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "QL2+JSON.m"; path = "Internals/QL2+JSON.m"; sourceTree = "<group>"; };
 		654E9D07185C4EBE0084E6F0 /* RethinkDbClient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RethinkDbClient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		654E9D0A185C4EBE0084E6F0 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		654E9D0D185C4EBE0084E6F0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -421,6 +425,8 @@
 				65A02F4F1B06DB4E00F003C1 /* RethinkDBClient-Private.h */,
 				65A02F501B06DD8200F003C1 /* RethinkDBCursors-Private.h */,
 				65A02F4C1B06DAEA00F003C1 /* RethinkDBCursors.m */,
+				653818C91CC6D1950082A50B /* QL2+JSON.h */,
+				653818CA1CC6D1950082A50B /* QL2+JSON.m */,
 			);
 			name = Internals;
 			sourceTree = "<group>";
@@ -491,6 +497,7 @@
 				654E9D99185C593D0084E6F0 /* WireFormat.h in Headers */,
 				654E9D7C185C593D0084E6F0 /* ExtensionField.h in Headers */,
 				654E9D7D185C593D0084E6F0 /* Field.h in Headers */,
+				653818CB1CC6D1950082A50B /* QL2+JSON.h in Headers */,
 				654E9D95185C593D0084E6F0 /* UnknownFieldSet.h in Headers */,
 				654E9D38185C57610084E6F0 /* Ql2.pb.h in Headers */,
 				654E9D6F185C593D0084E6F0 /* Bootstrap.h in Headers */,
@@ -683,6 +690,7 @@
 				654E9D71185C593D0084E6F0 /* CodedInputStream.m in Sources */,
 				654E9D9A185C593D0084E6F0 /* WireFormat.m in Sources */,
 				654E9D8D185C593D0084E6F0 /* PBMutableExtensionRegistry.m in Sources */,
+				653818CC1CC6D1950082A50B /* QL2+JSON.m in Sources */,
 				654E9D79185C593D0084E6F0 /* ExtendableMessage_Builder.m in Sources */,
 				654E9D81185C593D0084E6F0 /* GeneratedMessage_Builder.m in Sources */,
 				654E9D94185C593D0084E6F0 /* UnknownFieldSet_Builder.m in Sources */,
