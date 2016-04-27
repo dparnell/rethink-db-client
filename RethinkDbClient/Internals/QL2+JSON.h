@@ -30,6 +30,12 @@
 #import <Foundation/Foundation.h>
 #import "Ql2.pb.h"
 
+@interface Datum (JSON)
+
+- (void) toJSON:(NSMutableData*)data;
+
+@end
+
 @interface Term (JSON)
 
 - (void) toJSON:(NSMutableData*)data;

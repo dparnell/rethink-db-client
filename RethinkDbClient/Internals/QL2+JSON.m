@@ -29,16 +29,81 @@
 
 #import "QL2+JSON.h"
 
-@implementation Term (JSON)
+@implementation Datum (JSON)
 
 - (void) toJSON:(NSMutableData *)data {
-    [data appendBytes: "[" length: 1];
+    char buf[32];
     
-    [data appendBytes: "]" length: 1];
+    switch ([self type]) {
+        case Datum_DatumTypeRNull:
+            [data appendBytes: "null" length: 4];
+            break;
+            
+        case Datum_DatumTypeRBool:
+            if([self rBool]) {
+                [data appendBytes: "true" length: 4];
+            } else {
+                [data appendBytes: "false" length: 5];
+            }
+            break;
+            
+        case Datum_DatumTypeRNum:
+            snprintf(buf, sizeof(buf), "%lf", [self rNum]);
+            [data appendBytes: buf length: strlen(buf)];
+            break;
+            
+/*          
+            Datum_DatumTypeRStr = 4,
+            Datum_DatumTypeRArray = 5,
+            Datum_DatumTypeRObject = 6,
+            Datum_DatumTypeRJson = 7,
+ */
+
+        default:
+            @throw @"Unhandled datum type";
+            break;
+    }
 }
 
 @end
 
+@implementation Term (JSON)
+
+- (void) encodeArguments:(NSMutableData*) data {
+    BOOL first = YES;
+    
+    [data appendBytes: ",[" length: 2];
+    for (Term *arg in [self args]) {
+        if(first) {
+            first = NO;
+        } else {
+            [data appendBytes: "," length: 1];
+        }
+        [arg toJSON: data];
+    }
+    [data appendBytes: "]" length: 1];
+}
+
+- (void) encodeOptions:(NSMutableData*) data {
+    
+}
+
+- (void) toJSON:(NSMutableData *)data {
+    char buf[32];
+    
+    if(type == Term_TermTypeDatum) {
+        [[self datum] toJSON: data];
+    } else {
+        [data appendBytes: "[" length: 1];
+        snprintf(buf, sizeof(buf), "%d", type);
+        [data appendBytes: buf length: strlen(buf)];
+        [self encodeArguments: data];
+        [self encodeOptions: data];
+        [data appendBytes: "]" length: 1];
+    }
+}
+
+@end
 
 @implementation Query (JSON)
 
@@ -65,10 +130,10 @@
     NSMutableData *data = [NSMutableData new];
 
     [data appendBytes: "[" length: 1];
-    snprintf(buf, sizeof(buf), "%d,[", query.type);
+    snprintf(buf, sizeof(buf), "%d,", query.type);
     [data appendBytes: buf length: strlen(buf)];
     [[self query] toJSON: data];
-    [data appendBytes: "]," length: 2];
+    [data appendBytes: "," length: 1];
     [self encodeOptionsAsJson: data];
     [data appendBytes: "]" length: 1];
     

@@ -344,6 +344,18 @@ static NSString* rethink_error = @"RethinkDB Error";
     return _term;
 }
 
+- (Query*) query {
+    if(_query) {
+        return _query;
+    }
+    
+    Query_Builder* q = [Query_Builder new];
+    q.type = Query_QueryTypeStart;
+    q.query = _term;
+    
+    return [q build];
+}
+
 #pragma mark -
 #pragma mark Input stream delegate function
 

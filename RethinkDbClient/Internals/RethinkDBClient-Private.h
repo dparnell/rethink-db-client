@@ -42,6 +42,8 @@
 - (void) addCursor:(RethinkDBCursor*)cursor;
 - (void) removeCursor:(RethinkDBCursor*)cursor;
 
+- (Query*) query;
+
 @property (retain) Term* term;
 
 @end
