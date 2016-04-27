@@ -32,7 +32,8 @@
 @implementation Datum (JSON)
 
 - (void) toJSON:(NSMutableData *)data {
-    char buf[32];
+    NSData *tmp;
+    NSNumber *num;
     
     switch ([self type]) {
         case Datum_DatumTypeRNull:
@@ -48,12 +49,17 @@
             break;
             
         case Datum_DatumTypeRNum:
-            snprintf(buf, sizeof(buf), "%lf", [self rNum]);
-            [data appendBytes: buf length: strlen(buf)];
+            num = [NSNumber numberWithDouble: [self rNum]];
+            tmp = [[num stringValue] dataUsingEncoding: NSUTF8StringEncoding];
+            [data appendData: tmp];
             break;
-            
+
+        case Datum_DatumTypeRStr:
+            tmp = [NSJSONSerialization dataWithJSONObject: [self rStr] options: 0 error: nil];
+            [data appendData: tmp];
+            break;
 /*          
-            Datum_DatumTypeRStr = 4,
+             = 4,
             Datum_DatumTypeRArray = 5,
             Datum_DatumTypeRObject = 6,
             Datum_DatumTypeRJson = 7,
@@ -130,7 +136,7 @@
     NSMutableData *data = [NSMutableData new];
 
     [data appendBytes: "[" length: 1];
-    snprintf(buf, sizeof(buf), "%d,", query.type);
+    snprintf(buf, sizeof(buf), "%d,", type);
     [data appendBytes: buf length: strlen(buf)];
     [[self query] toJSON: data];
     [data appendBytes: "," length: 1];

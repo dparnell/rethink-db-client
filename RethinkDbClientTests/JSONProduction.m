@@ -27,14 +27,26 @@
     [super tearDown];
 }
 
-- (void)testJsonGeneration {
+- (void)testSimpleJsonGeneration {
     RethinkDbClient *r = [[RethinkDbClient alloc] initWithConnection: nil];
     
     RethinkDbClient *num = (RethinkDbClient*)[r expr: [NSNumber numberWithDouble: 1234.4567]];
     Query *query = [num query];
     NSData *json = [query toJSON];
-    NSLog(@"json data = %@", json);
-    NSLog(@"json = %@", [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding]);
+    NSString *str = [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding];
+    
+    XCTAssert([str isEqualToString: @"[1,1234.4567,{}]"]);
+}
+
+- (void)testAddJsonGeneration {
+    RethinkDbClient *r = [[RethinkDbClient alloc] initWithConnection: nil];
+    
+    RethinkDbClient *num = (RethinkDbClient*)[[r expr: [NSNumber numberWithDouble: 1234.4567]] add: [NSNumber numberWithInt: 42]];
+    Query *query = [num query];
+    NSData *json = [query toJSON];
+    NSString *str = [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding];
+
+    XCTAssert([str isEqualToString: @"[1,[24,[1234.4567,42]],{}]"]);
 }
 
 @end
