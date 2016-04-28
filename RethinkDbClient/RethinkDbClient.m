@@ -34,7 +34,7 @@
 #import "Internals/RethinkDBCursors-Private.h"
 #import "Internals/QL2+JSON.h"
 
-//#define DUMP_MESSAGES
+#define DUMP_MESSAGES
 
 NSString* kRethinkDbOrderedKeys = @"__RethinkDb__Ordered__Keys__";
 
@@ -151,6 +151,7 @@ static NSString* rethink_error = @"RethinkDB Error";
     int64_t token;
     NSInteger variable_number;
     BOOL json_mode;
+    int64_t json_token;
     
     __strong NSLock *token_lock;
     __strong NSLock *socket_lock;
@@ -361,6 +362,10 @@ static NSString* rethink_error = @"RethinkDB Error";
 
 #ifdef DUMP_MESSAGES
 -(NSString*) dumpData:(NSData*) data {
+    if(json_mode) {
+        return [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
+    }
+    
     NSUInteger length = [data length];
     NSMutableString *result = [NSMutableString stringWithCapacity: length*4];
     const unsigned char *bytes = (const unsigned char*)[data bytes];
@@ -372,6 +377,7 @@ static NSString* rethink_error = @"RethinkDB Error";
             [result appendFormat: @",%d", byte];
         }
     }
+    
     return result;
 }
 #endif
@@ -385,6 +391,9 @@ static NSString* rethink_error = @"RethinkDB Error";
 
         case NSStreamEventHasBytesAvailable: {
             if(_partial_data == nil) {
+                if(json_mode) {
+                    json_token = [pb_input_stream readRawLittleEndian64];
+                }
                 expected_size = [pb_input_stream readRawLittleEndian32];
                 _partial_data = [NSMutableData dataWithCapacity: expected_size];
             }
@@ -397,7 +406,13 @@ static NSString* rethink_error = @"RethinkDB Error";
 #ifdef DUMP_MESSAGES
                 NSLog(@"< <<%@>>", [self dumpData: _partial_data]);
 #endif
-                Response *response = [Response parseFromData: _partial_data];
+                Response *response;
+                
+                if(json_mode) {
+                    response = nil;
+                } else {
+                    response = [Response parseFromData: _partial_data];
+                }
                 _partial_data = nil;
                 
                 if(response.hasToken) {

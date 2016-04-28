@@ -29,11 +29,87 @@
 
 #import "QL2+JSON.h"
 
+static void json_encode_string(NSString *string, NSMutableData *data) {
+    char *buffer;
+    NSUInteger length = [string length];
+    unichar *ch = malloc(sizeof(unichar) * length);
+    NSUInteger out_size = 0;
+    NSUInteger out_pos = 0;
+    
+    [string getCharacters: ch];
+    
+    for(NSUInteger i = 0; i < length; i++) {
+        unichar c = ch[i];
+        
+        if(c == '"' || c == '\\' || c == '\b' || c == '\f' || c == '\n' || c == '\r' || c == '\t') {
+            out_size += 2;
+        } else if(c < 32) {
+            out_size += 6;
+        } else {
+            out_size++;
+        }
+    }
+    
+    buffer = malloc(out_size);
+    out_pos = 0;
+    for(NSUInteger i = 0; i < length; i++) {
+        unichar c = ch[i];
+
+        switch (c) {
+            case '"':
+                buffer[out_pos++] = '\\';
+                buffer[out_pos++] = '"';
+                break;
+            case '\\':
+                buffer[out_pos++] = '\\';
+                buffer[out_pos++] = '\\';
+                break;
+            case '\b':
+                buffer[out_pos++] = '\\';
+                buffer[out_pos++] = 'b';
+                break;
+            case '\f':
+                buffer[out_pos++] = '\\';
+                buffer[out_pos++] = 'f';
+                break;
+            case '\n':
+                buffer[out_pos++] = '\\';
+                buffer[out_pos++] = 'n';
+                break;
+            case '\r':
+                buffer[out_pos++] = '\\';
+                buffer[out_pos++] = 'r';
+                break;
+            case '\t':
+                buffer[out_pos++] = '\\';
+                buffer[out_pos++] = 't';
+                break;
+                
+            default:
+                if(c < 32) {
+                    sprintf(&buffer[out_pos], "\\u%04x", c);
+                    out_pos += 6;
+                } else {
+                    buffer[out_pos++] = c;
+                }
+                break;
+        }
+    }
+    free(ch);
+    
+    [data appendBytes: "\"" length: 1];
+    [data appendBytes: buffer length: out_size];
+    [data appendBytes: "\"" length: 1];
+    
+    free(buffer);
+}
+
 @implementation Datum (JSON)
 
 - (void) toJSON:(NSMutableData *)data {
     NSData *tmp;
     NSNumber *num;
+    BOOL first = YES;
     
     switch ([self type]) {
         case Datum_DatumTypeRNull:
@@ -55,13 +131,42 @@
             break;
 
         case Datum_DatumTypeRStr:
-            tmp = [NSJSONSerialization dataWithJSONObject: [self rStr] options: 0 error: nil];
-            [data appendData: tmp];
+            json_encode_string([self rStr], data);
             break;
-/*          
-             = 4,
-            Datum_DatumTypeRArray = 5,
-            Datum_DatumTypeRObject = 6,
+            
+        case Datum_DatumTypeRArray:
+            // Term_TermTypeMakeArray
+            [data appendBytes: "[2,[" length: 4];
+            for (Term *arg in [self rArray]) {
+                if(first) {
+                    first = NO;
+                } else {
+                    [data appendBytes: "," length: 1];
+                }
+                
+                [arg toJSON: data];
+            }
+            [data appendBytes: "]]" length: 2];
+            break;
+            
+        case Datum_DatumTypeRObject:
+            [data appendBytes: "{" length: 1];
+            
+            for (Datum_AssocPair *pair in [self rObject]) {
+                if(first) {
+                    first = NO;
+                } else {
+                    [data appendBytes: "," length: 1];
+                }
+                
+                json_encode_string([pair key], data);
+                [data appendBytes: ":" length: 1];
+                [[pair val] toJSON: data];
+            }
+            
+            [data appendBytes: "}" length: 1];
+            break;
+/*
             Datum_DatumTypeRJson = 7,
  */
 
@@ -123,10 +228,7 @@
             [data appendBytes: "," length: 1];
         }
         
-        [data appendBytes: "\"" length: 1];
-        [data appendData: [[pair key] dataUsingEncoding: NSUTF8StringEncoding]];
-        [data appendBytes: "\":" length: 2];
-        
+        json_encode_string([pair key], data);
     }
     [data appendBytes: "}" length: 1];
 }
