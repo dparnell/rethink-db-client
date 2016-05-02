@@ -43,7 +43,7 @@ static void json_encode_string(NSString *string, NSMutableData *data) {
         
         if(c == '"' || c == '\\' || c == '\b' || c == '\f' || c == '\n' || c == '\r' || c == '\t') {
             out_size += 2;
-        } else if(c < 32) {
+        } else if(c < 32 || c > 127) {
             out_size += 6;
         } else {
             out_size++;
@@ -86,7 +86,7 @@ static void json_encode_string(NSString *string, NSMutableData *data) {
                 break;
                 
             default:
-                if(c < 32) {
+                if(c < 32 || c > 127) {
                     sprintf(&buffer[out_pos], "\\u%04x", c);
                     out_pos += 6;
                 } else {
@@ -229,6 +229,8 @@ static void json_encode_string(NSString *string, NSMutableData *data) {
         }
         
         json_encode_string([pair key], data);
+        [data appendBytes: ":" length: 1];
+        [[pair val] toJSON: data];
     }
     [data appendBytes: "}" length: 1];
 }

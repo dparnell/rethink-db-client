@@ -29,12 +29,8 @@
 
 #import <XCTest/XCTest.h>
 #import "RethinkDbClient.h"
-
-@interface RethinkDbClient (Private)
-
-- (id) term;
-
-@end
+#import "RethinkDBClient-Private.h"
+#import "QL2+JSON.h"
 
 @interface RethinkDbClientTests : XCTestCase {
     RethinkDbClient* r;
@@ -193,6 +189,10 @@
         return [arg1 add: arg2];
     } withArguments: [NSArray arrayWithObjects: [NSNumber numberWithInt: 3], [NSNumber numberWithInt: 4], nil]];
     
+    NSData *json_data = [[(RethinkDbClient*)query query] toJSON];
+    NSString *json = [[NSString alloc] initWithData: json_data encoding: NSUTF8StringEncoding];
+    
+    XCTAssertEqualObjects(json, @"[1,[64,[[69,[[2,[0,1]],[24,[[10,[0]],[10,[1]]]]]],3,4]],{}]");
     id response = [query run: &error];
     XCTAssertNotNil(response, @"query failed: %@", error);
     XCTAssertEqualObjects(response, [NSNumber numberWithInt: 7], @"the result should be 7");
