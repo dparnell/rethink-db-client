@@ -106,6 +106,19 @@ static void json_encode_string(NSString *string, NSMutableData *data) {
 
 @implementation Datum (JSON)
 
++ (Datum*) fromObject:(id)obj {
+    Datum_Builder *b = [Datum_Builder new];
+    
+    if([obj isKindOfClass: [NSString class]]) {
+        [b setType: Datum_DatumTypeRStr];
+        [b setRStr: (NSString*) obj];
+    } else if([obj isKindOfClass: [NSNumber class]]) {
+        [b setType: Datum_DatumTypeRNum];
+        [b setRNum: [(NSNumber*)obj doubleValue]];
+    }
+    return [b build];
+}
+
 - (void) toJSON:(NSMutableData *)data {
     NSData *tmp;
     NSNumber *num;
@@ -246,9 +259,29 @@ static void json_encode_string(NSString *string, NSMutableData *data) {
     [data appendBytes: "," length: 1];
     [self encodeOptionsAsJson: data];
     [data appendBytes: "]" length: 1];
-    
+
     return data;
 }
 
 @end
 
+
+@implementation Response (JSON)
+
++ (Response*) fromJSON:(NSData*)data withToken:(int64_t)token {
+    Response_Builder *b = [Response_Builder new];
+    NSDictionary *json = [NSJSONSerialization JSONObjectWithData: data options: 0 error: nil];
+    
+    Response_ResponseType type = [[json objectForKey: @"t"] intValue];
+    
+    [b setToken: token];
+    [b setType: type];
+    
+    for (id obj in [json objectForKey: @"r"]) {
+        [b addResponse: [Datum fromObject: obj]];
+    }
+
+    return [b build];
+}
+
+@end

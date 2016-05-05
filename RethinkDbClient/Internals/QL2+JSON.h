@@ -47,3 +47,9 @@
 - (NSData*) toJSON;
 
 @end
+
+@interface Response (JSON)
+
++ (Response*) fromJSON:(NSData*)data withToken:(int64_t)token;
+
+@end

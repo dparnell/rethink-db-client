@@ -409,7 +409,7 @@ static NSString* rethink_error = @"RethinkDB Error";
                 Response *response;
                 
                 if(json_mode) {
-                    response = nil;
+                    response = [Response fromJSON: _partial_data withToken: json_token];
                 } else {
                     response = [Response parseFromData: _partial_data];
                 }
@@ -423,6 +423,7 @@ static NSString* rethink_error = @"RethinkDB Error";
                         if([op isKindOfClass: [RethinkDBOperation class]]) {
                             RethinkDBOperation *rop = (RethinkDBOperation*)op;
                             
+                            NSLog(@"rop.token = %lld", rop.token);
                             if(rop.token == response.token) {
                                 rethink_op = rop;
                                 break;
@@ -955,7 +956,7 @@ static NSDictionary* term_name_to_type = nil;
         [socket_lock lock];
         @try {
             if(json_mode) {
-                [pb_output_stream writeRawLittleEndian64: query.token];
+                [pb_output_stream writeRawLittleEndian64: query_token];
             }
             [pb_output_stream writeRawLittleEndian32: size];
 #ifdef DUMP_MESSAGES
