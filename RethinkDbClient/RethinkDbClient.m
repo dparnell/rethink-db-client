@@ -34,7 +34,7 @@
 #import "Internals/RethinkDBCursors-Private.h"
 #import "Internals/QL2+JSON.h"
 
-#define DUMP_MESSAGES
+//#define DUMP_MESSAGES
 
 NSString* kRethinkDbOrderedKeys = @"__RethinkDb__Ordered__Keys__";
 
@@ -423,7 +423,9 @@ static NSString* rethink_error = @"RethinkDB Error";
                         if([op isKindOfClass: [RethinkDBOperation class]]) {
                             RethinkDBOperation *rop = (RethinkDBOperation*)op;
                             
+#ifdef DUMP_MESSAGES
                             NSLog(@"rop.token = %lld", rop.token);
+#endif
                             if(rop.token == response.token) {
                                 rethink_op = rop;
                                 break;
