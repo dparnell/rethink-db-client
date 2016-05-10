@@ -810,44 +810,6 @@ static NSDictionary* term_name_to_type = nil;
     return [NSError errorWithDomain: rethink_error code: -1 userInfo: [NSDictionary dictionaryWithObject: @"Invalid response type" forKey: NSLocalizedDescriptionKey]];
 }
 
-- (Datum*) datumFromNSObject:(id) object {
-    Datum_Builder* result = [Datum_Builder new];
-    
-    if(object == nil || [object isKindOfClass: [NSNull class]]) {
-        result.type = Datum_DatumTypeRNull;
-    } else if([object isKindOfClass: [NSString class]]) {
-        result.type = Datum_DatumTypeRStr;
-        result.rStr = object;
-    } else if([object isKindOfClass: [NSNumber class]]) {
-        NSNumber* num = (NSNumber*)object;
-        
-        if (num == (void*)kCFBooleanFalse || num == (void*)kCFBooleanTrue) {
-            result.type = Datum_DatumTypeRBool;
-            result.rBool = [num boolValue];
-        } else {
-            result.type = Datum_DatumTypeRNum;
-            result.rNum = [object doubleValue];
-        }
-    } else if([object isKindOfClass: [NSArray class]]) {
-        NSArray* array = (NSArray*)object;
-        result.type = Datum_DatumTypeRArray;
-        for(id obj in array) {
-            [result addRArray: [self datumFromNSObject: obj]];
-        }
-    } else if([object isKindOfClass: [NSDictionary class]]) {
-        NSDictionary* dict = (NSDictionary*)object;
-        result.type = Datum_DatumTypeRObject;
-        
-        [dict enumerateKeysAndObjectsUsingBlock:^(NSString* key, id obj, BOOL *stop) {
-            Datum_AssocPair_Builder* pair = [Datum_AssocPair_Builder new];
-            pair.key = key;
-            pair.val = [self datumFromNSObject: obj];
-            
-            [result addRObject: [pair build]];
-        }];
-    }
-    return [result build];
-}
 
 - (Term*) exprTerm:(id)object {
     if([object isKindOfClass: [Term class]]) {
@@ -863,7 +825,7 @@ static NSDictionary* term_name_to_type = nil;
     
     Term_Builder* term = [Term_Builder new];
     term.type = Term_TermTypeDatum;
-    term.datum = [self datumFromNSObject: object];
+    term.datum = [Datum datumFromNSObject: object];
     
     return [term build];
 }

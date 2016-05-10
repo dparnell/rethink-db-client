@@ -106,17 +106,43 @@ static void json_encode_string(NSString *string, NSMutableData *data) {
 
 @implementation Datum (JSON)
 
-+ (Datum*) fromObject:(id)obj {
-    Datum_Builder *b = [Datum_Builder new];
++ (Datum*) datumFromNSObject:(id) object {
+    Datum_Builder* result = [Datum_Builder new];
     
-    if([obj isKindOfClass: [NSString class]]) {
-        [b setType: Datum_DatumTypeRStr];
-        [b setRStr: (NSString*) obj];
-    } else if([obj isKindOfClass: [NSNumber class]]) {
-        [b setType: Datum_DatumTypeRNum];
-        [b setRNum: [(NSNumber*)obj doubleValue]];
+    if(object == nil || [object isKindOfClass: [NSNull class]]) {
+        result.type = Datum_DatumTypeRNull;
+    } else if([object isKindOfClass: [NSString class]]) {
+        result.type = Datum_DatumTypeRStr;
+        result.rStr = object;
+    } else if([object isKindOfClass: [NSNumber class]]) {
+        NSNumber* num = (NSNumber*)object;
+        
+        if (num == (void*)kCFBooleanFalse || num == (void*)kCFBooleanTrue) {
+            result.type = Datum_DatumTypeRBool;
+            result.rBool = [num boolValue];
+        } else {
+            result.type = Datum_DatumTypeRNum;
+            result.rNum = [object doubleValue];
+        }
+    } else if([object isKindOfClass: [NSArray class]]) {
+        NSArray* array = (NSArray*)object;
+        result.type = Datum_DatumTypeRArray;
+        for(id obj in array) {
+            [result addRArray: [self datumFromNSObject: obj]];
+        }
+    } else if([object isKindOfClass: [NSDictionary class]]) {
+        NSDictionary* dict = (NSDictionary*)object;
+        result.type = Datum_DatumTypeRObject;
+        
+        [dict enumerateKeysAndObjectsUsingBlock:^(NSString* key, id obj, BOOL *stop) {
+            Datum_AssocPair_Builder* pair = [Datum_AssocPair_Builder new];
+            pair.key = key;
+            pair.val = [self datumFromNSObject: obj];
+            
+            [result addRObject: [pair build]];
+        }];
     }
-    return [b build];
+    return [result build];
 }
 
 - (void) toJSON:(NSMutableData *)data {
@@ -278,7 +304,7 @@ static void json_encode_string(NSString *string, NSMutableData *data) {
     [b setType: type];
     
     for (id obj in [json objectForKey: @"r"]) {
-        [b addResponse: [Datum fromObject: obj]];
+        [b addResponse: [Datum datumFromNSObject: obj]];
     }
 
     return [b build];

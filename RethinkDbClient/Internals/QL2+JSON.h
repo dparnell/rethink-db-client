@@ -32,6 +32,8 @@
 
 @interface Datum (JSON)
 
++ (Datum*) datumFromNSObject:(id)obj;
+
 - (void) toJSON:(NSMutableData*)data;
 
 @end
